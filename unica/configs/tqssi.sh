@@ -19,7 +19,7 @@
 
 case "$TARGET_CODENAME" in
     *wifi)
-        # Galaxy Tab S9+ (WiFi) (One UI 7.0)
+        # Galaxy Tab S9+ (WiFi) (One UI 8.0)
         SOURCE_FIRMWARE="SM-X810/EUX/R52W705QG4R"
         SOURCE_EXTRA_FIRMWARES=()
         SOURCE_PLATFORM_SDK_VERSION=36
@@ -96,7 +96,7 @@ case "$TARGET_CODENAME" in
         SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR=true
         ;;
     gts*)
-        # Galaxy Tab S9+ (5G) (One UI 7.0)
+        # Galaxy Tab S9+ (5G) (One UI 8.0)
         SOURCE_FIRMWARE="SM-X816B/EUX/350635071230543"
         SOURCE_EXTRA_FIRMWARES=()
         SOURCE_PLATFORM_SDK_VERSION=36
