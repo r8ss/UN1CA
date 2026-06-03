@@ -1,7 +1,7 @@
 # Copyright (c) 2025 Salvo Giangreco
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-# Device configuration file for Galaxy Tab S7 (WIFI) (gts7wifi)
+# Device configuration file for Galaxy Tab S7 (WIFI) (gts7lwifi)
 TARGET_NAME="Galaxy Tab S7 (WIFI)"
 TARGET_CODENAME="gts7lwifi"
 TARGET_ASSERT_MODEL=("SM-T870")
