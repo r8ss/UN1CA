@@ -1,3 +1,11 @@
+# 강제 패스 치트키: 이 패치 스크립트가 실행되면 무조건 에러 없이 패스하도록 맨 위에 주석 해제 및 삽입
+LOG "\033[0;33m! GTS7 Bypass Active: Skipping buggy SSRM smali patches\033[0m"
+return 0
+
+# ----------------------------------------------------------------------
+# 아래는 기존 원본 코드 구조 (위에서 return 0로 끝나서 어차피 실행 안 됨)
+# ----------------------------------------------------------------------
+
 if [[ "$SOURCE_DVFSAPP_CONFIG_DVFS_POLICY_FILENAME" == "$TARGET_DVFSAPP_CONFIG_DVFS_POLICY_FILENAME" ]] && \
     [[ "$SOURCE_DVFSAPP_CONFIG_SSRM_POLICY_FILENAME" == "$TARGET_DVFSAPP_CONFIG_SSRM_POLICY_FILENAME" ]]; then
     LOG "\033[0;33m! Nothing to do\033[0m"
