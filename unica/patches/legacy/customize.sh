@@ -107,13 +107,6 @@ EXTRACT_KERNEL_MODULES() {
 
 PATCHED=false
 
-# Pre-API 34
-# - Add ro.surface_flinger.enable_frame_rate_override if missing
-#
-# Pre-API 35
-# - Place ro.surface_flinger.use_content_detection_for_refresh_rate correctly
-# - Add debug.sf.show_refresh_rate_overlay_render_rate if missing
-# - Add ro.surface_flinger.game_default_frame_rate_override if missing
 BACKPORT_SF_PROPS
 
 # Support legacy Face HAL (pre-API 34)
@@ -148,7 +141,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "34" ]; then
 fi
 
 # Support legacy SehLights HAL (pre-API 35)
-# - Check for [lsr wD, wS, #0x18] to determine if the newer HAL is already in place
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     if [ -f "$WORK_DIR/vendor/bin/hw/vendor.samsung.hardware.light-service" ] && \
             ! xxd -p -c 4 "$WORK_DIR/vendor/bin/hw/vendor.samsung.hardware.light-service" | grep -q "1853$"; then
@@ -159,9 +151,9 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
 fi
 
 # Ensure config_num_physical_slots is configured (pre-API 36)
-# https://android.googlesource.com/platform/frameworks/opt/telephony/+/42e37234cee15c9f3fcfac0532110abfc8843b99%5E%21/#F0
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
-    if [ ! "$(GET_PROP "ro.telephony.sim_slots.count")" ] && \
+    if [ -f "$WORK_DIR/vendor/bin/secril_config_svc" ] && \
+            [ ! "$(GET_PROP "ro.telephony.sim_slots.count")" ] && \
             ! grep -q "ro.telephony.sim_slots.count" "$WORK_DIR/vendor/bin/secril_config_svc" && \
             ! grep -q -r "config_num_physical_slots" "$WORK_DIR/vendor/overlay"; then
         PATCHED=true
@@ -171,14 +163,11 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
 fi
 
 # Support legacy sdFAT kernel drivers (pre-API 35)
-# https://android.googlesource.com/platform/system/vold/+/refs/tags/android-16.0.0_r2/fs/Vfat.cpp#150
-# - Check for 'bogus directory:' to determine if newer sdFAT drivers are in place
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     EXTRACT_KERNEL_IMAGE
     if grep -q "SDFAT" "$TMP_DIR/out/kernel" && \
         ! grep -q "bogus directory:" "$TMP_DIR/out/kernel"; then
         PATCHED=true
-        # ",time_offset=%d" -> "NUL"
         HEX_PATCH "$WORK_DIR/system/system/bin/vold" "2c74696d655f6f66667365743d2564" "000000000000000000000000000000"
     fi
 fi
@@ -194,7 +183,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
 fi
 
 # Ensure Knox Matrix support
-# - Check if target firmware runs on One UI 5.1.1 or above
 TARGET_FIRMWARE_PATH="$(cut -d "/" -f 1 -s <<< "$TARGET_FIRMWARE")_$(cut -d "/" -f 2 -s <<< "$TARGET_FIRMWARE")"
 if [ "$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.build.version.oneui")" -lt "50101" ]; then
     PATCHED=true
@@ -211,9 +199,6 @@ if [ "$(GET_PROP "$FW_DIR/$TARGET_FIRMWARE_PATH/system/system/build.prop" "ro.bu
 fi
 
 # Ensure KSMBD support in kernel
-# - 4.19.x and below: unsupported
-# - 5.4.x-5.10.x: backport (https://github.com/namjaejeon/ksmbd.git)
-# - 5.15.x and above: supported
 if [ -f "$WORK_DIR/system/system/priv-app/StorageShare/StorageShare.apk" ]; then
     EXTRACT_KERNEL_IMAGE
     if ! grep -q "ksmbd" "$TMP_DIR/out/kernel"; then
@@ -233,16 +218,11 @@ if [ -f "$WORK_DIR/system/system/priv-app/StorageShare/StorageShare.apk" ]; then
 fi
 
 # Ensure Sem eBPF Smart Hotspot functionality (pre-API 35)
-# - Check for TARGET_PLATFORM_SDK_VERSION < 35 as 4.14 kernel support has been deprecated in Android V
-# - Disable "ro.kernel.version" == "4.14" leftover checks, 4.14 needs eBPF kernel backports anyway
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
     EXTRACT_KERNEL_IMAGE
     if grep -q "Linux version 4.14" "$TMP_DIR/out/kernel"; then
         PATCHED=true
-        # [b.eq #0xXXXXXX] -> [nop]
-        # - android::net::MobileBBController::hotspotOn(const std::string)
         HEX_PATCH "$WORK_DIR/system/system/bin/netd" "1f01096be0010054" "1f01096b1f2003d5"
-        # - android::net::MobileBBController::isMBBPathsPresent()
         HEX_PATCH "$WORK_DIR/system/system/bin/netd" "1f01096b20010054" "1f01096b1f2003d5"
     fi
 fi
@@ -267,21 +247,17 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ]; then
 fi
 
 # Support legacy usb_notify kernel drivers (pre-API 36)
-# https://github.com/salvogiangri/UN1CA/discussions/519
-# - Check for 'SKY_DEFAULT' to determine if newer usb_notify drivers are in place
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
     VBOOT_MISSING=true
     KERNEL_MISSING=true
 
     if [ -f "$WORK_DIR/kernel/vendor_boot.img" ]; then
-        # Check for GKI devices
         EXTRACT_KERNEL_MODULES
         if grep -q "SKY_DEFAULT" "$TMP_DIR/out/vendor_ramdisk"*; then
             VBOOT_MISSING=false
         fi
     fi
 
-    # Check for legacy devices
     EXTRACT_KERNEL_IMAGE
     if grep -q "SKY_DEFAULT" "$TMP_DIR/out/kernel"; then
         KERNEL_MISSING=false
@@ -330,7 +306,6 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "36" ]; then
 fi
 
 # Support legacy LED Cover level
-# - Replace deprecated 'android.nfc.NfcAdapter' APIs with 'com.samsung.android.nfc.adapter.ISamsungNfcAdapter'
 if [ -f "$WORK_DIR/system/system/priv-app/LedCoverService/LedCoverService.apk" ]; then
     if [ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NFC_LED_COVER_LEVEL")" -ge "30" ] && \
             [ "$(GET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_NFC_LED_COVER_LEVEL")" -lt "100" ]; then
