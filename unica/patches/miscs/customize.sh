@@ -64,3 +64,8 @@ if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "36" ]; then
     APPLY_PATCH "system" "system/framework/services.jar" \
         "$MODPATH/smali/system/framework/services.jar/0001-Disable-vendor-mismatch-warning.patch"
 fi
+# Disable vendor mismatch warning
+SMALI_PATCH "system" "system/framework/services.jar" \
+    "smali/com/android/server/am/ActivityManagerService\$\$ExternalSyntheticLambda6.smali" "replaceall" \
+    "Build fingerprint is not consistent, warning user" \
+    "Build fingerprint is not consistent"
