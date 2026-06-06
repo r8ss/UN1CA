@@ -27,13 +27,6 @@ SMALI_PATCH "system" "system/framework/services.jar" \
     'ro.product.model' \
     'ro.product.vendor.model'
 
-# Disable vendor mismatch warning (API 36+)
-if [ "$SOURCE_PLATFORM_SDK_VERSION" -ge "36" ]; then
-    APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/smali/system/framework/services.jar/0001-Disable-vendor-mismatch-warning.patch"
-fi
-SET_PROP_IF_DIFF "vendor" "ro.oem_unlock_supported" "0"
-
 # Better device/model detection in CoreRune
 SMALI_PATCH "system" "system/framework/framework.jar" \
     "smali_classes6/com/samsung/android/rune/CoreRune.smali" "replace" \
