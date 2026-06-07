@@ -25,48 +25,48 @@ LOG_MISSING_PATCHES()
 # ]
 
 # SEC_PRODUCT_FEATURE_BUILD_MAINLINE_API_LEVEL
-if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
+#if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
   # SMALI_PATCH "system" "system/framework/esecomm.jar" \
     #     "smali/com/sec/esecomm/EsecommAdapter.smali" "replace" \
     #     "<clinit>()V" \
     #     "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
     #     "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/enterprise/hdm/HdmSakManager.smali" "replace" \
-        "isSupported(Landroid/content/Context;)Z" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/enterprise/hdm/HdmVendorController.smali" "replace" \
-        "<init>()V" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/knox/dar/ddar/ta/TAProxy.smali" "replace" \
-        "updateServiceHolder(Z)V" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/SystemServer.smali" "replace" \
-        "startOtherServices(Lcom/android/server/utils/TimingsTraceAndSlog;)V" \
-        "MAINLINE_API_LEVEL: $SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "MAINLINE_API_LEVEL: $TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/SystemServer.smali" "replace" \
-        "startOtherServices(Lcom/android/server/utils/TimingsTraceAndSlog;)V" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali_classes2/com/android/server/power/PowerManagerUtil.smali" "replace" \
-        "<clinit>()V" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali_classes2/com/android/server/sepunion/EngmodeService\$EngmodeTimeThread.smali" "replace" \
-        "<clinit>()V" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
-fi
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali/com/android/server/enterprise/hdm/HdmSakManager.smali" "replace" \
+    #    "isSupported(Landroid/content/Context;)Z" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali/com/android/server/enterprise/hdm/HdmVendorController.smali" "replace" \
+    #    "<init>()V" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali/com/android/server/knox/dar/ddar/ta/TAProxy.smali" "replace" \
+    #    "updateServiceHolder(Z)V" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali/com/android/server/SystemServer.smali" "replace" \
+    #    "startOtherServices(Lcom/android/server/utils/TimingsTraceAndSlog;)V" \
+    #    "MAINLINE_API_LEVEL: $SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "MAINLINE_API_LEVEL: $TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali/com/android/server/SystemServer.smali" "replace" \
+    #    "startOtherServices(Lcom/android/server/utils/TimingsTraceAndSlog;)V" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali_classes2/com/android/server/power/PowerManagerUtil.smali" "replace" \
+    #    "<clinit>()V" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+    #SMALI_PATCH "system" "system/framework/services.jar" \
+    #    "smali_classes2/com/android/server/sepunion/EngmodeService\$EngmodeTimeThread.smali" "replace" \
+    #    "<clinit>()V" \
+    #    "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+    #    "$TARGET_PRODUCT_SHIPPING_API_LEVEL"
+#fi
 
 # SEC_PRODUCT_FEATURE_AUDIO_CONFIG_RECORDALIVE_LIB_VERSION
 if [[ "$SOURCE_AUDIO_CONFIG_RECORDALIVE_LIB_VERSION" != "$TARGET_AUDIO_CONFIG_RECORDALIVE_LIB_VERSION" ]]; then
