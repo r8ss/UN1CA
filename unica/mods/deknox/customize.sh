@@ -1,6 +1,7 @@
 SET_PROP_IF_DIFF "vendor" "ro.security.fips.ux" "Disabled"
 
-if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
+# 🛠️ tqssi 조건일 때도 qssi와 동일하게 a73xqxx를 도너 기기로 지정하도록 수정
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
     DONOR="a73xqxx"
 elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "essi" ]]; then
     DONOR="a54xnsxx"
@@ -75,14 +76,14 @@ DELETE_FROM_WORK_DIR "system" "system/priv-app/KnoxPushManager"
 DELETE_FROM_WORK_DIR "system" "system/priv-app/KnoxSandbox"
 DELETE_FROM_WORK_DIR "system" "system/priv-app/KnoxZtFramework"
 
-if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
     ADD_TO_WORK_DIR "$DONOR" "system" "system/bin/apexd" 0 2000 755 "u:object_r:apexd_exec:s0"
     ADD_TO_WORK_DIR "$DONOR" "system" "system/bin/gsid" 0 2000 755 "u:object_r:gsid_exec:s0"
     ADD_TO_WORK_DIR "$DONOR" "system" "system/lib/service.incremental.so" 0 0 644 "u:object_r:system_lib_file:s0"
     ADD_TO_WORK_DIR "$DONOR" "system" "system/lib64/service.incremental.so" 0 0 644 "u:object_r:system_lib_file:s0"
 fi
 
-if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
     APPLY_PATCH "system" "system/framework/framework.jar" \
         "$MODPATH/vold/framework.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
     APPLY_PATCH "system" "system/framework/services.jar" \
@@ -135,7 +136,7 @@ APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
 APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
-APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
+**백업 복구 완료** "priv-app/StorageManager/StorageManager.apk" \
     "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
@@ -286,7 +287,7 @@ SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
     'isMposSupported()Z' 'false'
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
-    "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
+    "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smales" "return" \
     'isMposSupported()Z' 'false'
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
