@@ -1,6 +1,5 @@
 SET_PROP_IF_DIFF "vendor" "ro.security.fips.ux" "Disabled"
 
-# 🛠️ tqssi 조건일 때도 qssi와 동일하게 a73xqxx를 도너 기기로 지정하도록 수정
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
     DONOR="a73xqxx"
 elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "essi" ]]; then
@@ -13,13 +12,10 @@ DELETE_FROM_WORK_DIR "system" "system/app/BlockchainBasicKit"
 ADD_TO_WORK_DIR "$DONOR" "system" "system/bin/installd" 0 2000 755 "u:object_r:installd_exec:s0"
 ADD_TO_WORK_DIR "$DONOR" "system" "system/bin/vdc" 0 2000 755 "u:object_r:vdc_exec:s0"
 ADD_TO_WORK_DIR "$DONOR" "system" "system/bin/vold" 0 2000 755 "u:object_r:vold_exec:s0"
-# Support legacy sdFAT kernel drivers (pre-API 35)
-# Check unica/patches/legacy/customize.sh for more info.
 if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ] && \
         grep -q "SDFAT" "$WORK_DIR/kernel/boot.img" && \
         ! grep -q "bogus directory:" "$WORK_DIR/kernel/boot.img"; then
     LOG_STEP_IN
-    # ",time_offset=%d" -> "NUL"
     HEX_PATCH "$WORK_DIR/system/system/bin/vold" "2c74696d655f6f66667365743d2564" "000000000000000000000000000000"
     LOG_STEP_OUT
 fi
@@ -83,7 +79,6 @@ if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYS
     ADD_TO_WORK_DIR "$DONOR" "system" "system/lib64/service.incremental.so" 0 0 644 "u:object_r:system_lib_file:s0"
 fi
 
-# 🛠️ tqssi 장치는 프레임워크 구조가 패치 파일 규격과 달라 git apply 에러를 유발하므로 qssi 장치만 패치 적용
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
     APPLY_PATCH "system" "system/framework/framework.jar" \
         "$MODPATH/vold/framework.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
@@ -105,7 +100,6 @@ find "$APKTOOL_DIR/system/framework/services.jar" -type f -name "*.smali" -print
     | xargs -0 -I "{}" -P "$(nproc)" sed -i "s/^\.source.*/\.source \"SourceFile\"/g" "{}"
 
 if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
-    # 🛠️ tqssi 장치는 TAProxy.smali 내부 구조 상수 불일치로 에러가 나므로 예외 처리 추가
     if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
         LOG "- Skipping TAProxy smali patch for tqssi"
     else
@@ -121,8 +115,10 @@ fi
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_SDP
 APPLY_PATCH "system" "system/framework/framework.jar" \
     "$MODPATH/sdp/framework.jar/0001-Nuke-Knox-SDP.patch"
-APPLY_PATCH "system" "system/framework/services.jar" \
-    "$MODPATH/sdp/services.jar/0001-Nuke-Knox-SDP.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/sdp/services.jar/0001-Nuke-Knox-SDP.patch"
+fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
 APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
@@ -156,31 +152,22 @@ HDM_POLICY_TYPE="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxs
 
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "$MODPATH/hdm/Traceur.apk/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
     "$MODPATH/hdm/knoxsdk.jar/0001-Nuke-Knox-HDM.patch"
 
 if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
-    # 🛠️ HDM 관련 API 레벨 비교 구문도 tqssi 타겟 빌드 시 에러 소지가 크므로 미리 예외 처리 자동 스킵 피드백 적용
     if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
         LOG "- Skipping HDM API level smali patches for tqssi"
     else
@@ -198,67 +185,46 @@ if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVE
             > /dev/null
     fi
 fi
-# TODO nuke HdmVendorController.smali
 APPLY_PATCH "system" "system/framework/services.jar" \
     "$MODPATH/hdm/services.jar/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "$MODPATH/hdm/DeviceDiagnostics.apk/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "$MODPATH/hdm/ManagedProvisioning.apk/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "$MODPATH/hdm/SecSettings.apk/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "$MODPATH/hdm/SecSettingsIntelligence.apk/0001-Nuke-Knox-HDM.patch"
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" \
-    "HDM_VERSION" \
-    > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" \
-    "HDM_POLICY_TYPE" \
-    > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
 APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "$MODPATH/hdm/StorageManager.apk/0001-Nuke-Knox-HDM.patch"
 
@@ -291,7 +257,6 @@ SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
     'isBldpEventSupported()Z' 'false'
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_MPOS
-# TODO add services.jar patch
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
     'isMposSupported()Z' 'false'
@@ -338,10 +303,6 @@ else
     APPLY_PATCH "system" "system/framework/services.jar" \
         "$MODPATH/blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
 fi
-
-# TODO get rid of the following features
-# SEC_PRODUCT_FEATURE_KNOX_SUPPORT_UCS
-# SEC_PRODUCT_FEATURE_FRAMEWORK_SUPPORT_MOBILE_PAYMENT
 
 LOG "- Restoring original SourceFile attribute in /system/system/framework/services.jar"
 find "$APKTOOL_DIR/system/framework/services.jar" -type f -name "*.smali" -print0 \
