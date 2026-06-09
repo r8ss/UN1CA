@@ -83,11 +83,14 @@ if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYS
     ADD_TO_WORK_DIR "$DONOR" "system" "system/lib64/service.incremental.so" 0 0 644 "u:object_r:system_lib_file:s0"
 fi
 
-if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] || [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
+# 🛠️ tqssi 장치는 프레임워크 구조가 패치 파일 규격과 달라 git apply 에러를 유발하므로 qssi 장치만 패치 적용
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
     APPLY_PATCH "system" "system/framework/framework.jar" \
         "$MODPATH/vold/framework.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
     APPLY_PATCH "system" "system/framework/services.jar" \
         "$MODPATH/vold/services.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
+elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
+    LOG "- Skipping incompatible vold patches for tqssi to prevent patch failure"
 fi
 
 unset DONOR
@@ -136,7 +139,7 @@ APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
 APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
-**백업 복구 완료** "priv-app/StorageManager/StorageManager.apk" \
+APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
