@@ -147,6 +147,20 @@ APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
 DECODE_APK "system" "system/framework/knoxsdk.jar"
 
+# SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
+APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
+    "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch"
+APPLY_PATCH "system" "system/framework/framework.jar" \
+    "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch"
+APPLY_PATCH "system" "system/framework/framework.jar" \
+    "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
+APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
+    "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+fi
+
 HDM_VERSION="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxsdk.jar/smali/com/samsung/android/knox/hdm/HdmManager.smali" | tr -d "\"" | awk '{print $3}' -)"
 HDM_POLICY_TYPE="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxsdk.jar/smali/com/samsung/android/knox/hdm/HdmManager.smali" | tr -d "\"" | awk '{print $5}' -)"
 
