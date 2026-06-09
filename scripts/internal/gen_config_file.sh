@@ -57,8 +57,13 @@ if [ ! "$TARGET_OS_SINGLE_SYSTEM_IMAGE" ]; then
     LOGE "TARGET_OS_SINGLE_SYSTEM_IMAGE is not set!"
     exit 1
 elif [ ! -f "$SRC_DIR/unica/configs/$TARGET_OS_SINGLE_SYSTEM_IMAGE.sh" ]; then
-    LOGE "\"$TARGET_OS_SINGLE_SYSTEM_IMAGE\" is not a valid system image"
-    exit 1
+    if [ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" = "tqssi" ]; then
+        # tqssi는 파일이 없으니 표준 qssi 설정을 베이스로 로드
+        source "$SRC_DIR/unica/configs/qssi.sh" || exit 1
+    else
+        LOGE "\"$TARGET_OS_SINGLE_SYSTEM_IMAGE\" is not a valid system image"
+        exit 1
+    fi
 else
     source "$SRC_DIR/unica/configs/$TARGET_OS_SINGLE_SYSTEM_IMAGE.sh" || exit 1
 fi
