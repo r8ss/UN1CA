@@ -103,13 +103,19 @@ SOURCE_FILE_ATTR="${SOURCE_FILE_ATTR//\//\\\/}"
 LOG "- Replacing SourceFile attribute in /system/system/framework/services.jar"
 find "$APKTOOL_DIR/system/framework/services.jar" -type f -name "*.smali" -print0 \
     | xargs -0 -I "{}" -P "$(nproc)" sed -i "s/^\.source.*/\.source \"SourceFile\"/g" "{}"
+
 if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/knox/dar/ddar/ta/TAProxy.smali" "replace" \
-        "updateServiceHolder(Z)V" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        > /dev/null
+    # 🛠️ tqssi 장치는 TAProxy.smali 내부 구조 상수 불일치로 에러가 나므로 예외 처리 추가
+    if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
+        LOG "- Skipping TAProxy smali patch for tqssi"
+    else
+        SMALI_PATCH "system" "system/framework/services.jar" \
+            "smali/com/android/server/knox/dar/ddar/ta/TAProxy.smali" "replace" \
+            "updateServiceHolder(Z)V" \
+            "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
+            "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+            > /dev/null
+    fi
 fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_SDP
@@ -172,19 +178,25 @@ SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     > /dev/null
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
     "$MODPATH/hdm/knoxsdk.jar/0001-Nuke-Knox-HDM.patch"
+
 if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/enterprise/hdm/HdmSakManager.smali" "replace" \
-        "isSupported(Landroid/content/Context;)Z" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        > /dev/null
-    SMALI_PATCH "system" "system/framework/services.jar" \
-        "smali/com/android/server/enterprise/hdm/HdmVendorController.smali" "replace" \
-        "<init>()V" \
-        "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
-        "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-        > /dev/null
+    # 🛠️ HDM 관련 API 레벨 비교 구문도 tqssi 타겟 빌드 시 에러 소지가 크므로 미리 예외 처리 자동 스킵 피드백 적용
+    if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
+        LOG "- Skipping HDM API level smali patches for tqssi"
+    else
+        SMALI_PATCH "system" "system/framework/services.jar" \
+            "smali/com/android/server/enterprise/hdm/HdmSakManager.smali" "replace" \
+            "isSupported(Landroid/content/Context;)Z" \
+            "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
+            "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+            > /dev/null
+        SMALI_PATCH "system" "system/framework/services.jar" \
+            "smali/com/android/server/enterprise/hdm/HdmVendorController.smali" "replace" \
+            "<init>()V" \
+            "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
+            "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
+            > /dev/null
+    fi
 fi
 # TODO nuke HdmVendorController.smali
 APPLY_PATCH "system" "system/framework/services.jar" \
