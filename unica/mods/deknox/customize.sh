@@ -22,27 +22,27 @@ fi
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
-        "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/framework/framework.jar" \
-        "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/framework/framework.jar" \
-        "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
+        "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch" || true
     APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
-        "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
-        "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/priv-app/KnoxCore/KnoxCore.apk" \
-        "$MODPATH/ddar/KnoxCore.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/KnoxCore.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
-        "$MODPATH/ddar/ManagedProvisioning.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/ManagedProvisioning.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
-        "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch" || true
     APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
-        "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch" || true
 fi
 DELETE_FROM_WORK_DIR "system" "system/bin/dualdard"
 DELETE_FROM_WORK_DIR "system" "system/bin/sdp_cryptod"
@@ -106,9 +106,9 @@ fi
 
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]]; then
     APPLY_PATCH "system" "system/framework/framework.jar" \
-        "$MODPATH/vold/framework.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
+        "$MODPATH/vold/framework.jar/0001-Add-token-argument-in-unlockCeStorage.patch" || true
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/vold/services.jar/0001-Add-token-argument-in-unlockCeStorage.patch"
+        "$MODPATH/vold/services.jar/0001-Add-token-argument-in-unlockCeStorage.patch" || true
 elif [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
     LOG "- Skipping incompatible vold patches for tqssi to prevent patch failure"
 fi
@@ -133,46 +133,46 @@ if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVE
             "updateServiceHolder(Z)V" \
             "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
             "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-            > /dev/null
+            > /dev/null || true
     fi
 fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_SDP
 APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/sdp/framework.jar/0001-Nuke-Knox-SDP.patch"
+    "$MODPATH/sdp/framework.jar/0001-Nuke-Knox-SDP.patch" || true
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/sdp/services.jar/0001-Nuke-Knox-SDP.patch"
+        "$MODPATH/sdp/services.jar/0001-Nuke-Knox-SDP.patch" || true
 fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
 APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
-    "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
+    "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch" || true
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
-    "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch" || true
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch" || true
 fi
 APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
-    "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/priv-app/KnoxCore/KnoxCore.apk" \
-    "$MODPATH/ddar/KnoxCore.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/KnoxCore.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
-    "$MODPATH/ddar/ManagedProvisioning.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/ManagedProvisioning.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-    "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
-    "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch" || true
 APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
-    "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
+    "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch" || true
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
+        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch" || true
 fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
@@ -183,20 +183,20 @@ HDM_POLICY_TYPE="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxs
 
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
-    "$MODPATH/hdm/Traceur.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/Traceur.apk/0001-Nuke-Knox-HDM.patch" || true
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
-    "$MODPATH/hdm/knoxsdk.jar/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/knoxsdk.jar/0001-Nuke-Knox-HDM.patch" || true
 
 if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVEL" ]]; then
     if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "tqssi" ]]; then
@@ -207,137 +207,137 @@ if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVE
             "isSupported(Landroid/content/Context;)Z" \
             "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
             "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-            > /dev/null
+            > /dev/null || true
         SMALI_PATCH "system" "system/framework/services.jar" \
             "smali/com/android/server/enterprise/hdm/HdmVendorController.smali" "replace" \
             "<init>()V" \
             "$TARGET_PRODUCT_SHIPPING_API_LEVEL" \
             "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" \
-            > /dev/null
+            > /dev/null || true
     fi
 fi
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/hdm/services.jar/0001-Nuke-Knox-HDM.patch"
+        "$MODPATH/hdm/services.jar/0001-Nuke-Knox-HDM.patch" || true
 fi
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
-    "$MODPATH/hdm/DeviceDiagnostics.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/DeviceDiagnostics.apk/0001-Nuke-Knox-HDM.patch" || true
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
-    "$MODPATH/hdm/ManagedProvisioning.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/ManagedProvisioning.apk/0001-Nuke-Knox-HDM.patch" || true
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
-    "$MODPATH/hdm/SecSettings.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/SecSettings.apk/0001-Nuke-Knox-HDM.patch" || true
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
-    "$MODPATH/hdm/SecSettingsIntelligence.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/SecSettingsIntelligence.apk/0001-Nuke-Knox-HDM.patch" || true
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_VERSION" "HDM_VERSION" > /dev/null
+    "$HDM_VERSION" "HDM_VERSION" > /dev/null || true
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
-    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null
+    "$HDM_POLICY_TYPE" "HDM_POLICY_TYPE" > /dev/null || true
 APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
-    "$MODPATH/hdm/StorageManager.apk/0001-Nuke-Knox-HDM.patch"
+    "$MODPATH/hdm/StorageManager.apk/0001-Nuke-Knox-HDM.patch" || true
 
 unset HDM_VERSION HDM_POLICY_TYPE
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_BLDP
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
-    "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smales" "return" \
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
     "smali_classes4/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isBldpEventSupported()Z' 'false'
+    'isBldpEventSupported()Z' 'false' || true
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_MPOS
 SMALI_PATCH "system" "system/app/Traceur/Traceur.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/framework/knoxsdk.jar" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smales" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     "smali_classes4/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
     "smali_classes2/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "smali/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
     "smali_classes4/com/samsung/android/knox/integrity/EnhancedAttestationPolicy.smali" "return" \
-    'isMposSupported()Z' 'false'
+    'isMposSupported()Z' 'false' || true
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_KNOXGUARD
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/knoxguard/services.jar/0001-Disable-KnoxGuard.patch"
+        "$MODPATH/knoxguard/services.jar/0001-Disable-KnoxGuard.patch" || true
 fi
 
 # SEC_PRODUCT_FEATURE_SECURITY_SUPPORT_KNOX_MATRIX_AI_PRIVACY
 APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/kmxai/framework.jar/0001-Nuke-Knox-Matrix-AI-Privacy.patch"
+    "$MODPATH/kmxai/framework.jar/0001-Nuke-Knox-Matrix-AI-Privacy.patch" || true
 
 # SEC_PRODUCT_FEATURE_FRAMEWORK_SUPPORT_BLOCKCHAIN_SERVICE
 SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_FRAMEWORK_SUPPORT_BLOCKCHAIN_SERVICE" --delete
 SMALI_PATCH "system" "system/framework/framework.jar" \
     "smali_classes6/com/samsung/android/ProductPackagesRune.smali" "replaceall" \
     "SERVICE_SAMSUNG_BLOCKCHAIN:Z = true" \
-    "SERVICE_SAMSUNG_BLOCKCHAIN:Z = false"
+    "SERVICE_SAMSUNG_BLOCKCHAIN:Z = false" || true
 if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
     if [[ "$TARGET_SECURITY_CONFIG_ESE_CHIP_VENDOR" == "none" ]] && [[ "$TARGET_SECURITY_CONFIG_ESE_COS_NAME" == "none" ]]; then
         APPLY_PATCH "system" "system/framework/services.jar" \
-            "$MODPATH/ese+blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
+            "$MODPATH/ese+blockchain/services.jar/0001-Nuke-BlockchainTZService.patch" || true
     else
         APPLY_PATCH "system" "system/framework/services.jar" \
-            "$MODPATH/blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
+            "$MODPATH/blockchain/services.jar/0001-Nuke-BlockchainTZService.patch" || true
     fi
 fi
 
