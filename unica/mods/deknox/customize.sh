@@ -145,6 +145,10 @@ APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelli
     "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
 APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
     "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
+fi
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
 DECODE_APK "system" "system/framework/knoxsdk.jar"
