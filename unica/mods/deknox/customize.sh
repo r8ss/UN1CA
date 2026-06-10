@@ -129,8 +129,10 @@ APPLY_PATCH "system" "system/framework/framework.jar" \
     "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
     "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
-APPLY_PATCH "system" "system/framework/services.jar" \
-    "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+fi
 APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch"
 APPLY_PATCH "system" "system/priv-app/KnoxCore/KnoxCore.apk" \
@@ -146,20 +148,6 @@ APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_HDM
 DECODE_APK "system" "system/framework/knoxsdk.jar"
-
-# SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
-APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
-    "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch"
-APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch"
-APPLY_PATCH "system" "system/framework/framework.jar" \
-    "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
-APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
-    "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
-if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
-    APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
-fi
 
 HDM_VERSION="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxsdk.jar/smali/com/samsung/android/knox/hdm/HdmManager.smali" | tr -d "\"" | awk '{print $3}' -)"
 HDM_POLICY_TYPE="$(grep "const.* - .*\\w\"" "$APKTOOL_DIR/system/framework/knoxsdk.jar/smali/com/samsung/android/knox/hdm/HdmManager.smali" | tr -d "\"" | awk '{print $5}' -)"
@@ -199,8 +187,10 @@ if [[ "$SOURCE_PRODUCT_SHIPPING_API_LEVEL" != "$TARGET_PRODUCT_SHIPPING_API_LEVE
             > /dev/null
     fi
 fi
-APPLY_PATCH "system" "system/framework/services.jar" \
-    "$MODPATH/hdm/services.jar/0001-Nuke-Knox-HDM.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/hdm/services.jar/0001-Nuke-Knox-HDM.patch"
+fi
 SMALI_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
     "smali/com/samsung/android/knox/hdm/HdmManager.smali" "replaceall" \
     "$HDM_VERSION" "HDM_VERSION" > /dev/null
@@ -297,8 +287,10 @@ SMALI_PATCH "system_ext" "priv-app/SystemUI/SystemUI.apk" \
     'isMposSupported()Z' 'false'
 
 # SEC_PRODUCT_FEATURE_KNOX_SUPPORT_KNOXGUARD
-APPLY_PATCH "system" "system/framework/services.jar" \
-    "$MODPATH/knoxguard/services.jar/0001-Disable-KnoxGuard.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/knoxguard/services.jar/0001-Disable-KnoxGuard.patch"
+fi
 
 # SEC_PRODUCT_FEATURE_SECURITY_SUPPORT_KNOX_MATRIX_AI_PRIVACY
 APPLY_PATCH "system" "system/framework/framework.jar" \
@@ -310,12 +302,14 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
     "smali_classes6/com/samsung/android/ProductPackagesRune.smali" "replaceall" \
     "SERVICE_SAMSUNG_BLOCKCHAIN:Z = true" \
     "SERVICE_SAMSUNG_BLOCKCHAIN:Z = false"
-if [[ "$TARGET_SECURITY_CONFIG_ESE_CHIP_VENDOR" == "none" ]] && [[ "$TARGET_SECURITY_CONFIG_ESE_COS_NAME" == "none" ]]; then
-    APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/ese+blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
-else
-    APPLY_PATCH "system" "system/framework/services.jar" \
-        "$MODPATH/blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    if [[ "$TARGET_SECURITY_CONFIG_ESE_CHIP_VENDOR" == "none" ]] && [[ "$TARGET_SECURITY_CONFIG_ESE_COS_NAME" == "none" ]]; then
+        APPLY_PATCH "system" "system/framework/services.jar" \
+            "$MODPATH/ese+blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
+    else
+        APPLY_PATCH "system" "system/framework/services.jar" \
+            "$MODPATH/blockchain/services.jar/0001-Nuke-BlockchainTZService.patch"
+    fi
 fi
 
 LOG "- Restoring original SourceFile attribute in /system/system/framework/services.jar"
