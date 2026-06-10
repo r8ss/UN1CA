@@ -19,6 +19,31 @@ if [ "$TARGET_PLATFORM_SDK_VERSION" -lt "35" ] && \
     HEX_PATCH "$WORK_DIR/system/system/bin/vold" "2c74696d655f6f66667365743d2564" "000000000000000000000000000000"
     LOG_STEP_OUT
 fi
+# SEC_PRODUCT_FEATURE_KNOX_SUPPORT_DUAL_DAR
+if [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" != "tqssi" ]]; then
+    APPLY_PATCH "system" "system/app/Traceur/Traceur.apk" \
+        "$MODPATH/ddar/Traceur.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/framework/framework.jar" \
+        "$MODPATH/ddar/framework.jar/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/framework/framework.jar" \
+        "$MODPATH/ddar/framework.jar/0002-Nuke-MDF.patch"
+    APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
+        "$MODPATH/ddar/knoxsdk.jar/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/framework/services.jar" \
+        "$MODPATH/ddar/services.jar/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/priv-app/DeviceDiagnostics/DeviceDiagnostics.apk" \
+        "$MODPATH/ddar/DeviceDiagnostics.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/priv-app/KnoxCore/KnoxCore.apk" \
+        "$MODPATH/ddar/KnoxCore.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/priv-app/ManagedProvisioning/ManagedProvisioning.apk" \
+        "$MODPATH/ddar/ManagedProvisioning.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
+        "$MODPATH/ddar/SecSettings.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
+        "$MODPATH/ddar/SecSettingsIntelligence.apk/0001-Nuke-Knox-DualDAR.patch"
+    APPLY_PATCH "system_ext" "priv-app/StorageManager/StorageManager.apk" \
+        "$MODPATH/ddar/StorageManager.apk/0001-Nuke-Knox-DualDAR.patch"
+fi
 DELETE_FROM_WORK_DIR "system" "system/bin/dualdard"
 DELETE_FROM_WORK_DIR "system" "system/bin/sdp_cryptod"
 DELETE_FROM_WORK_DIR "system" "system/etc/init/dualdard.rc"
