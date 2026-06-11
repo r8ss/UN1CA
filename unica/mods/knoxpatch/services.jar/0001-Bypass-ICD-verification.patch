@@ -88,11 +88,14 @@ index 0778d27b8..9a3002cfc 100644
  
 -    iget-boolean v8, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mVerifiableIntegrity:Z
 -
-     iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
- 
-     iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
+-    iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
+-
+-    iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
++    iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
  
 -    invoke-direct {v6, v5, v8, v3, v9}, Lcom/samsung/android/security/keystore/AttestParameterSpec;-><init>([BZZLandroid/security/keystore/KeyGenParameterSpec;)V
++    iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
++
 +    invoke-direct {v6, v5, v3, v9}, Lcom/samsung/android/security/keystore/AttestParameterSpec;-><init>([BZLandroid/security/keystore/KeyGenParameterSpec;)V
  
      invoke-virtual {v4, v6}, Lcom/samsung/android/security/keystore/AttestationUtils;->generateKeyPair(Lcom/samsung/android/security/keystore/AttestParameterSpec;)Ljava/security/KeyPair;
@@ -185,7 +188,7 @@ index 5cd0064f2..3f92cc488 100644
      invoke-static {v0}, Lcom/samsung/android/security/keystore/AttestationUtils;->makeBool(I)Landroid/hardware/security/keymint/KeyParameter;
 @@ -648,11 +644,10 @@
  
-     invoke-static {v2, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/lang/String;)I
+     invoke-static {v2, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/log/Log;)I
  
 -    :cond_9
      :goto_5
@@ -250,10 +253,10 @@ index 5cd0064f2..3f92cc488 100644
  
      invoke-virtual {p0, v0}, Lcom/samsung/android/security/keystore/AttestationUtils;->generateKeyPair(Lcom/samsung/android/security/keystore/AttestParameterSpec;)Ljava/security/KeyPair;
  
-diff --git a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
+diff --git a/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali b/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
 index 8a776e723..106ad21d1 100644
---- a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
-+++ b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
+--- a/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
++++ b/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
 @@ -197,7 +197,7 @@
  
      new-instance v11, Lcom/samsung/android/security/keystore/AttestParameterSpec;
@@ -265,4 +268,3 @@ index 8a776e723..106ad21d1 100644
  
 -- 
 2.51.1
-
