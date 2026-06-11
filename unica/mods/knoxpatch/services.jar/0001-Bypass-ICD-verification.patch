@@ -88,14 +88,11 @@ index 0778d27b8..9a3002cfc 100644
  
 -    iget-boolean v8, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mVerifiableIntegrity:Z
 -
--    iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
--
--    iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
-+    iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
+     iget-object v9, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mSpec:Landroid/security/keystore/KeyGenParameterSpec;
+ 
+     iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
  
 -    invoke-direct {v6, v5, v8, v3, v9}, Lcom/samsung/android/security/keystore/AttestParameterSpec;-><init>([BZZLandroid/security/keystore/KeyGenParameterSpec;)V
-+    iget-object v5, v5, Lcom/samsung/android/security/keystore/AttestParameterSpec$Builder;->mChallenge:[B
-+
 +    invoke-direct {v6, v5, v3, v9}, Lcom/samsung/android/security/keystore/AttestParameterSpec;-><init>([BZLandroid/security/keystore/KeyGenParameterSpec;)V
  
      invoke-virtual {v4, v6}, Lcom/samsung/android/security/keystore/AttestationUtils;->generateKeyPair(Lcom/samsung/android/security/keystore/AttestParameterSpec;)Ljava/security/KeyPair;
@@ -159,34 +156,20 @@ diff --git a/smali_classes2/com/samsung/android/security/keystore/AttestationUti
 index 5cd0064f2..3f92cc488 100644
 --- a/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali
 +++ b/smali_classes2/com/samsung/android/security/keystore/AttestationUtils.smali
-@@ -326,11 +326,11 @@
- 
-     move-result v0
- 
--    if-nez v0, :cond_d
-+    if-nez v0, :cond_c
- 
-     iget-object v0, p1, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mChallenge:[B
- 
--    if-eqz v0, :cond_c
-+    if-eqz v0, :cond_b
- 
-     new-instance v1, Ljava/util/ArrayList;
- 
-@@ -360,12 +360,8 @@
+@@ -360,12 +360,6 @@
  
      invoke-virtual {v1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
  
 -    iget-boolean v0, p1, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mVerifiableIntegrity:Z
 -
-     const-string v2, "AttestationUtils"
- 
+-    const-string v2, "AttestationUtils"
+-
 -    if-eqz v0, :cond_9
 -
      const v0, 0x700008fe
  
      invoke-static {v0}, Lcom/samsung/android/security/keystore/AttestationUtils;->makeBool(I)Landroid/hardware/security/keymint/KeyParameter;
-@@ -648,11 +644,10 @@
+@@ -648,7 +642,6 @@
  
      invoke-static {v2, v0}, Landroid/util/Log;->w(Ljava/lang/String;Ljava/log/Log;)I
  
@@ -194,57 +177,7 @@ index 5cd0064f2..3f92cc488 100644
      :goto_5
      iget-boolean v0, p1, Lcom/samsung/android/security/keystore/AttestParameterSpec;->mSAKUidRequired:Z
  
--    if-eqz v0, :cond_b
-+    if-eqz v0, :cond_a
- 
-     const-string/jumbo v0, "constructAttestationArguments : set SAK UID required"
- 
-@@ -676,7 +671,7 @@
- 
-     move-result v0
- 
--    if-nez v0, :cond_a
-+    if-nez v0, :cond_9
- 
-     const-string/jumbo v0, "constructAttestationArguments : setSAKUidRequired API does not be supported in this model. This API is supported only in JDM models and the first API level needs to be higher than 34."
- 
-@@ -684,7 +679,7 @@
- 
-     goto :goto_6
- 
--    :cond_a
-+    :cond_9
-     const v0, 0x700009c4
- 
-     invoke-static {v0}, Lcom/samsung/android/security/keystore/AttestationUtils;->makeBool(I)Landroid/hardware/security/keymint/KeyParameter;
-@@ -693,7 +688,7 @@
- 
-     invoke-virtual {v1, v0}, Ljava/util/ArrayList;->add(Ljava/lang/Object;)Z
- 
--    :cond_b
-+    :cond_a
-     :goto_6
-     invoke-virtual {v1}, Ljava/util/ArrayList;->size()I
- 
-@@ -747,7 +742,7 @@
- 
-     throw p1
- 
--    :cond_c
-+    :cond_b
-     new-instance p0, Ljava/lang/IllegalArgumentException;
- 
-     const-string/jumbo p1, "constructAttestationArguments : The challenge cannot be null"
-@@ -756,7 +751,7 @@
- 
-     throw p0
- 
--    :cond_d
-+    :cond_c
-     new-instance p0, Ljava/lang/NullPointerException;
- 
-     const-string/jumbo p1, "constructAttestationArguments : alias == null"
-@@ -889,7 +884,7 @@
+@@ -889,7 +882,7 @@
  
      const/4 v1, 0x0
  
@@ -253,10 +186,10 @@ index 5cd0064f2..3f92cc488 100644
  
      invoke-virtual {p0, v0}, Lcom/samsung/android/security/keystore/AttestationUtils;->generateKeyPair(Lcom/samsung/android/security/keystore/AttestParameterSpec;)Ljava/security/KeyPair;
  
-diff --git a/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali b/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
+diff --git a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
 index 8a776e723..106ad21d1 100644
---- a/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
-+++ b/smali/com/samsung/android/ssdid/SemSsdidManagerService.smali
+--- a/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
++++ b/smali_classes2/com/samsung/android/ssdid/SemSsdidManagerService.smali
 @@ -197,7 +197,7 @@
  
      new-instance v11, Lcom/samsung/android/security/keystore/AttestParameterSpec;
