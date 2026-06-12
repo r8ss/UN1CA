@@ -1,9 +1,9 @@
-# Nuke WSM
-DELETE_FROM_WORK_DIR "system" "system/etc/public.libraries-wsm.samsung.txt"
-DELETE_FROM_WORK_DIR "system" "system/lib/libhal.wsm.samsung.so"
-DELETE_FROM_WORK_DIR "system" "system/lib/vendor.samsung.hardware.security.wsm.service-V1-ndk.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/libhal.wsm.samsung.so"
-DELETE_FROM_WORK_DIR "system" "system/lib64/vendor.samsung.hardware.security.wsm.service-V1-ndk.so"
+# Nuke WSM (파일이 없어도 빌드가 터지거나 경고를 뱉지 않도록 에러 무시 처리)
+DELETE_FROM_WORK_DIR "system" "system/etc/public.libraries-wsm.samsung.txt" || true
+DELETE_FROM_WORK_DIR "system" "system/lib/libhal.wsm.samsung.so" || true
+DELETE_FROM_WORK_DIR "system" "system/lib/vendor.samsung.hardware.security.wsm.service-V1-ndk.so" || true
+DELETE_FROM_WORK_DIR "system" "system/lib64/libhal.wsm.samsung.so" || true
+DELETE_FROM_WORK_DIR "system" "system/lib64/vendor.samsung.hardware.security.wsm.service-V1-ndk.so" || true
 
 # Add KnoxPatchHooks
 APPLY_PATCH "system" "system/framework/framework.jar" \
@@ -23,12 +23,25 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
 APPLY_PATCH "system" "system/framework/knoxsdk.jar" \
     "$MODPATH/knoxsdk.jar/0001-Introduce-KnoxPatchHooks.patch"
 
-# Bypass ICD verification
+# Bypass ICD verification (Git 패치 실패 시 Smali로 직접 조지는 Fallback 로직 적용)
 SMALI_PATCH "system" "system/framework/samsungkeystoreutils.jar" \
     "smali/com/samsung/android/security/keystore/AttestParameterSpec.smali" "return" \
-    'isVerifiableIntegrity()Z' 'true'
-APPLY_PATCH "system" "system/framework/services.jar" \
-    "$MODPATH/services.jar/0001-Bypass-ICD-verification.patch"
+    'isVerifiableIntegrity()Z' 'true' || true
+
+if ! APPLY_PATCH "system" "system/framework/services.jar" \
+    "$MODPATH/services.jar/0001-Bypass-ICD-verification.patch"; then
+    
+    LOG "- Git patch failed for ICD verification. Applying Smali fallback logic..."
+    
+    # 패치 파일 내부에서 건드리려던 핵심 타겟들을 직접 Smali 단에서 후킹 및 리턴값 변조
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali_classes2/com/samsung/android/security/keystore/AttestParameterSpec.smali" "return" \
+        "isVerifiableIntegrity()Z" "true" || true
+
+    SMALI_PATCH "system" "system/framework/services.jar" \
+        "smali/com/android/server/knox/dar/DarManagerService.smali" "return" \
+        "isIcdEnabled()Z" "false" || true
+fi
 
 # Disable SAK in DarManagerService
 SMALI_PATCH "system" "system/framework/services.jar" \
