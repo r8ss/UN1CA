@@ -1,4 +1,4 @@
-name: Build
+Name: Build
 
 on:
   workflow_dispatch:
@@ -81,3 +81,30 @@ jobs:
         run: |
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/make_rom.sh
+
+      # === 여기서부터 Gofile 업로드 단계 추가됨 ===
+      - name: Upload to Gofile
+        run: |
+          # 1. 아웃풋 디렉토리 내에 생성된 최종 ROM 짚 파일 찾기
+          # (UN1CA 빌드 아웃풋 경로 스타일에 따라 확장자나 파일명을 유동적으로 잡아야 함)
+          ROM_FILE=$(find out/ -name "*.zip" -o -name "*.tar" | head -n 1)
+          
+          if [ -z "$ROM_FILE" ]; then
+            echo "❌ 빌드된 롬 파일을 찾을 수 없습니다. 경로를 확인하세요."
+            exit 1
+          fi
+          
+          echo "찾은 파일: $ROM_FILE"
+          
+          # 2. 최적의 Gofile 업로드 서버 주소 받아오기
+          SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+          
+          # 3. 익명 업로드 진행 후 다운로드 주소 파싱해서 출력하기
+          echo "Gofile 업로드 중..."
+          DOWNLOAD_LINK=$(curl -# -F "file=@$ROM_FILE" "https://${SERVER}.gofile.io/uploadFile" | jq -r '.data.downloadPage')
+          
+          echo "===================================================="
+          echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
+          echo " 디바이스 타겟: ${{ matrix.target }}"
+          echo " 다운로드 링크: $DOWNLOAD_LINK"
+          echo "===================================================="
