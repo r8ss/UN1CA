@@ -17,6 +17,74 @@ SMALI_PATCH "system" "system/framework/framework.jar" \
 
 DECODE_APK "system" "system/priv-app/SecSettings/SecSettings.apk"
 
+# ====================================================================
+# [UN1CA 추가] AndroidManifest.xml에 설정 액티비티 인젝션
+# ====================================================================
+MANIFEST_FILE="$APKTOOL_DIR/system/priv-app/SecSettings/SecSettings.apk/AndroidManifest.xml"
+
+if [ -f "$MANIFEST_FILE" ]; then
+    LOG "- Injecting UN1CA Settings Activities into AndroidManifest.xml"
+    
+    cat << 'EOF' > /tmp/unica_activities.xml
+        <!-- UN1CA Settings Start -->
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_settings_title" android:name="com.android.settings.Settings$UnicaSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.UnicaSettingsFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_extra_settings_title" android:name="com.android.settings.Settings$UnicaExtraSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.extra.ExtraSettingsFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_hma_title" android:name="com.android.settings.Settings$UnicaHMASettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSpoofSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.hma.HideMyApplistFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_hide_dev_title" android:name="com.android.settings.Settings$UnicaHideDevSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSpoofSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.spoof.HideDeveloperStatusFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_spoof_settings_title" android:name="com.android.settings.Settings$UnicaSpoofSettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.spoof.SpoofSettingsFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <activity android:configChanges="keyboardHidden|orientation|screenSize" android:exported="true" android:label="@string/unica_ui_settings_title" android:name="com.android.settings.Settings$UnicaUISettingsActivity" android:parentActivityName="com.android.settings.Settings$UnicaSettingsActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+            <meta-data android:name="com.android.settings.FRAGMENT_CLASS" android:value="io.mesalabs.unica.settings.ui.UISettingsFragment"/>
+            <meta-data android:name="com.android.settings.HIGHLIGHT_MENU_KEY" android:value="@string/menu_key_unica_top_settings"/>
+        </activity>
+        <!-- UN1CA Settings End -->
+EOF
+
+    sed -i '/<\/application>/r /tmp/unica_activities.xml' "$MANIFEST_FILE"
+    rm -f /tmp/unica_activities.xml
+else
+    LOG "! Warning: Manifest file not found at $MANIFEST_FILE"
+fi
+# ====================================================================
+
 # Disable stock OTA references
 if [ ! -f "$WORK_DIR/system/system/priv-app/ChoiDujour/ChoiDujour.apk" ]; then
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
@@ -42,10 +110,6 @@ SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
 LOG_STEP_IN "- Adding UN1CA Settings"
 
 # Dynamically patch SecSettings
-# - Add missing/non-xml files in place
-# - Patch existing files
-#   - Use the first line of the file to tell sed how to apply the rest of the content
-#   - Exception made for files under *res/values* where the "resources" tag gets nuked
 while IFS= read -r f; do
     f="${f//$MODPATH\/SecSettings.apk\//}"
 
@@ -191,6 +255,7 @@ SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
     'return-void' \
     '    invoke-virtual {p0, v0}, Lcom/android/settingslib/search/SearchIndexableResourcesBase;->addIndex(Lcom/android/settingslib/search/SearchIndexableData;)V\n\n    return-void' \
     > /dev/null
+
 DECODE_APK "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk"
 LOG "- Patching \"smali_classes2/com/samsung/android/settings/intelligence/search/categorizing/TopLevelKeysCollector.smali\" in /system/system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk"
 SMALI_PATCH "system" "system/priv-app/SecSettingsIntelligence/SecSettingsIntelligence.apk" \
