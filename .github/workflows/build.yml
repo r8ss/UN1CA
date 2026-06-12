@@ -82,17 +82,22 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/make_rom.sh
 
-      - name: Upload to Gofile
+            - name: Upload to Gofile
         run: |
-          # 빌드 완료된 out 디렉토리 아래의 zip이나 tar 파일 찾기
-          ROM_FILE=$(find out/ -type f \( -name "*.zip" -o -name "*.tar" \) | head -n 1)
+          # 1. out/ 디렉토리 내부에서 크기가 100메가(100M) 이상인 진짜 롬 파일 찾기
+          ROM_FILE=$(find out/ -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
+          
+          # 만약 out/에 없으면 현재 작업 디렉토리 전체에서 다시 검색
+          if [ -z "$ROM_FILE" ]; then
+            ROM_FILE=$(find . -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
+          fi
           
           if [ -z "$ROM_FILE" ]; then
-            echo "❌ 빌드된 롬 파일을 찾을 수 없습니다. out/ 폴더 내부를 확인하세요."
+            echo "❌ 100MB 이상의 빌드된 롬 파일을 찾을 수 없습니다. 빌드 로그나 아웃풋 경로를 확인하세요."
             exit 1
           fi
           
-          echo "찾은 파일: $ROM_FILE"
+          echo "진짜 롬 파일 찾음: $ROM_FILE ($(du -sh "$ROM_FILE" | cut -f1))"
           
           # Gofile 업로드 서버 할당 받기
           SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
@@ -101,6 +106,11 @@ jobs:
           DOWNLOAD_LINK=$(curl -# -F "file=@$ROM_FILE" "https://${SERVER}.gofile.io/uploadFile" | jq -r '.data.downloadPage')
           
           echo "===================================================="
+          echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
+          echo " 디바이스 타겟: ${{ matrix.target }}"
+          echo " 다운로드 링크: $DOWNLOAD_LINK"
+          echo "===================================================="
+
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
           echo " 디바이스 타겟: ${{ matrix.target }}"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
