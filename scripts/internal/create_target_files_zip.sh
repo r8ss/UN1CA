@@ -120,12 +120,24 @@ while IFS= read -r f; do
     PARTITION=$(basename "$f")
     IS_VALID_PARTITION_NAME "$PARTITION" || continue
 
-    if $TARGET_USE_DYNAMIC_PARTITIONS; then
+        if $TARGET_USE_DYNAMIC_PARTITIONS; then
         "$SRC_DIR/scripts/build_fs_image.sh" "$TARGET_OS_FILE_SYSTEM_TYPE" \
             -o "$TMP_DIR/$PARTITION.img" -m -S \
             "$WORK_DIR/$PARTITION" "$WORK_DIR/configs/file_context-$PARTITION" "$WORK_DIR/configs/fs_config-$PARTITION" || exit 1
     else
-        _GET_PARTITION_SIZE "$PARTITION" > /dev/null || exit 1
+        # 크기 상수가 선언 안 되어 있으면 에러 내지 말고 기본 4GB(4294967296) 할당 후 계속 진행
+        local PART_SIZE
+        PART_SIZE="$(_GET_PARTITION_SIZE "$PARTITION" 2>/dev/null)"
+        if [ -z "$PART_SIZE" ]; then
+            LOG "- Warning: Size for $PARTITION not set, forcing fallback size (4GB)"
+            PART_SIZE="4294967296"
+        fi
+
+        "$SRC_DIR/scripts/build_fs_image.sh" "$TARGET_OS_FILE_SYSTEM_TYPE" \
+            -o "$TMP_DIR/$PARTITION.img" -m -S -s "$PART_SIZE" \
+            "$WORK_DIR/$PARTITION" "$WORK_DIR/configs/file_context-$PARTITION" "$WORK_DIR/configs/fs_config-$PARTITION" || exit 1
+    fi
+
 
         "$SRC_DIR/scripts/build_fs_image.sh" "$TARGET_OS_FILE_SYSTEM_TYPE" \
             -o "$TMP_DIR/$PARTITION.img" -m -S -s "$(_GET_PARTITION_SIZE "$PARTITION")" \
