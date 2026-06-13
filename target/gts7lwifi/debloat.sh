@@ -3,62 +3,76 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-# Debloat list for Galaxy Tab S7 (WIFI) (gts7lwifi)
-
-# 1. 고용량 삼성 블로트웨어 및 불필요한 기능 제거 (system 영역)
+# 1. System
 SYSTEM_DEBLOAT+="
-system/app/BixbyWakeUp
-system/app/KidsHome_Alpha
-system/app/SamsungTrends3
-system/app/StickerCenter
-system/app/AvatarEmojiSticker
-system/app/SamsungMax
-system/app/GalaxyWatchRROverlay
-system/priv-app/Bixby
-system/priv-app/BixbyService
-system/priv-app/SamsungSocial
-system/priv-app/SecureFolder
-system/priv-app/SamsungPass
-system/priv-app/SamsungPassAutofill
-system/priv-app/LedCoverService
-system/priv-app/DigitalWellbeing
-system/priv-app/DexDevelopment
+app/BixbyWakeUp
+app/KidsHome_Alpha
+app/SamsungTrends3
+app/StickerCenter
+app/AvatarEmojiSticker
+app/SamsungMax
+app/GalaxyWatchRROverlay
+app/WifiRROverlayAppLls
+priv-app/Bixby
+priv-app/BixbyService
+priv-app/SamsungSocial
+priv-app/SecureFolder
+priv-app/SamsungPass
+priv-app/SamsungPassAutofill
+priv-app/LedCoverService
+priv-app/DigitalWellbeing
+priv-app/DexDevelopment
+bin/mafpc_write
+bin/dhkprov
+bin/qchdcpkprov
+etc/init/dhkprov.rc
+lib64/vendor.samsung.hardware.security.hdcp.keyprovisioning@1.0.so
 "
 
-# 2. 용량 폭탄의 주범 (product 영역 대규모 삭제)
+# 2. Product
 PRODUCT_DEBLOAT+="
-product/app/Maps
-product/app/YouTube
-product/app/Gmail2
-product/app/CalendarGoogle
-product/app/Chrome
-product/app/Photos
-product/app/Videos
-product/app/SamsungMusic
-product/app/SamsungNotes
-product/app/SamsungFree
-product/app/SamsungGlobalGoals
-product/app/SamsungShop
-product/app/SamsungMembers
-product/app/PreloadInstaller
-product/priv-app/Velvet
-product/priv-app/GmsCoreCloudSync
-product/priv-app/Turbo
-product/priv-app/Tips
-product/priv-app/MainlineScf
+app/Maps
+app/YouTube
+app/Gmail2
+app/CalendarGoogle
+app/Chrome
+app/Photos
+app/Videos
+app/SamsungMusic
+app/SamsungNotes
+app/SamsungFree
+app/SamsungGlobalGoals
+app/SamsungShop
+app/SamsungMembers
+app/PreloadInstaller
+priv-app/Velvet
+priv-app/GmsCoreCloudSync
+priv-app/Turbo
+priv-app/Tips
+priv-app/MainlineScf
 "
 
-# 3. 기본 제공 Overlays
+# 3. System_ext 영역 삭제
+SYSTEM_EXT_DEBLOAT+="
+etc/permissions/com.qti.location.sdk.xml
+etc/permissions/com.qualcomm.location.xml
+etc/permissions/privapp-permissions-com.qualcomm.location.xml
+framework/com.qti.location.sdk.jar
+priv-app/com.qualcomm.location
+"
+
+
+# 4. Overlays
 SYSTEM_DEBLOAT+="
 system/app/WifiRROverlayAppLls
 "
 
-# 4. mAFPC
+# 5. mAFPC
 SYSTEM_DEBLOAT+="
 system/bin/mafpc_write
 "
 
-# 5. HDCP
+# 6. HDCP
 SYSTEM_DEBLOAT+="
 system/bin/dhkprov
 system/bin/qchdcpkprov
@@ -66,7 +80,7 @@ system/etc/init/dhkprov.rc
 system/lib64/vendor.samsung.hardware.security.hdcp.keyprovisioning@1.0.so
 "
 
-# 6. system_ext clean-up
+# 7. system_ext clean-up
 SYSTEM_EXT_DEBLOAT+="
 etc/permissions/com.qti.location.sdk.xml
 etc/permissions/com.qualcomm.location.xml
