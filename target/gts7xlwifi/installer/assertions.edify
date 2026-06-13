@@ -1,5 +1,2 @@
-# 1. 특정 커스텀 리커버리(afaneh92 빌드 등) 충돌 방지 검증
 is_substring("afaneh92", getprop("ro.twrp.version")) && abort("E3000: This package does not support afaneh92's recovery.");
-
-# 2. Galaxy Tab S7+ Wi-Fi (gts7xlwifi / SM-T970) 기기 및 부드로더 검증
 getprop("ro.boot.em.model") == "SM-T970" && getprop("ro.boot.bootloader") != "T970XXS8DXH1" && greater_than_int(getprop("ro.boot.rp"), "8") && abort("E3003: This package requires the \"T970XXS8DXH1\" firmware installed on your device; you have \"" + getprop("ro.boot.bootloader") + "\".");
