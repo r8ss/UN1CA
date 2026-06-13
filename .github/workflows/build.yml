@@ -62,4 +62,43 @@ jobs:
           java-version: '17'
           cache: 'gradle'
 
-      -
+      - name: Build dependencies
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          ./scripts/build_dependencies.sh
+
+      - name: Download stock firmwares
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          ./scripts/download_fw.sh
+
+      - name: Extract stock firmwares
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          ./scripts/extract_fw.sh
+
+      - name: Build ROM
+        run: |
+          source ./buildenv.sh ${{ matrix.target }}
+          ./scripts/make_rom.sh
+
+      - name: Upload to Gofile
+        run: |
+          ROM_FILE=$(find out/ -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
+          if [ -z "$ROM_FILE" ]; then
+            ROM_FILE=$(find . -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
+          fi
+          if [ -z "$ROM_FILE" ]; then
+            echo "❌ 100MB 이상의 빌드된 롬 파일을 찾을 수 없습니다."
+            exit 1
+          fi
+          FILE_SIZE=$(du -sh "$ROM_FILE" | cut -f1)
+          echo "진짜 롬 파일 찾음: $ROM_FILE ($FILE_SIZE)"
+          SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+          echo "Gofile 업로드 시작..."
+          DOWNLOAD_LINK=$(curl -# -F "file=@$ROM_FILE" "https://${SERVER}.gofile.io/uploadFile" | jq -r '.data.downloadPage')
+          echo "===================================================="
+          echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
+          echo " 디바이스 타겟: ${{ matrix.target }}"
+          echo " 다운로드 링크: $DOWNLOAD_LINK"
+          echo "===================================================="
