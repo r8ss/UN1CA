@@ -85,9 +85,3 @@ case "$TARGET_CODENAME" in
         SOURCE_WLAN_SUPPORT_SWITCH_FOR_INDIVIDUAL_APPS=true
         SOURCE_WLAN_SUPPORT_TWT_CONTROL=false
         SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR=true
-        ;;
-    gts*)
-        echo "\"$TARGET_CODENAME\" is not a valid target."
-        return 1
-        ;;
-esac
