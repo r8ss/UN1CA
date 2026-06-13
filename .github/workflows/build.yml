@@ -82,7 +82,7 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/make_rom.sh
 
-      - name: Upload to Gofile
+          - name: Upload to Gofile
         run: |
           # 100MB 이상 크기의 진짜 롬 파일 찾기
           ROM_FILE=$(find out/ -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
@@ -96,7 +96,8 @@ jobs:
             exit 1
           fi
           
-          echo "진짜 롬 파일 찾음: $ROM_FILE ($(du -sh "$ROM_FILE" | cut -f1))"
+          FILE_SIZE=$(du -sh "$ROM_FILE" | cut -f1)
+          echo "진짜 롬 파일 찾음: $ROM_FILE ($FILE_SIZE)"
           
           # Gofile 업로드 서버 할당
           SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
@@ -108,4 +109,4 @@ jobs:
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
           echo " 디바이스 타겟: ${{ matrix.target }}"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
-          echo "
+          echo "===================================================="
