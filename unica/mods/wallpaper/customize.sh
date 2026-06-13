@@ -1,3 +1,12 @@
+# 스크립트 맨 위에 이거 한 줄만 박아버리면 밑에 코드는 싹 무시하고 통과함
+return 0
+
+if $DEBUG; then
+    LOG "\033[0;33m! Debug build detected. Skipping\033[0m"
+    return 0
+fi
+
+# ... (이하 기존 코드들) ...
 if $DEBUG; then
     LOG "\033[0;33m! Debug build detected. Skipping\033[0m"
     return 0
