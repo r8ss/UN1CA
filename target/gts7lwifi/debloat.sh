@@ -67,6 +67,8 @@ product/priv-app/Turbo
 product/priv-app/Tips
 product/priv-app/MainlineScf
 product/priv-app/Upday
+product/app/SpeechServicesByGoogle
+product/priv-app/CarrierServices
 "
 
 # ==========================================
