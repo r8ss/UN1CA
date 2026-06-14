@@ -66,7 +66,6 @@ product/priv-app/GmsCoreCloudSync
 product/priv-app/Turbo
 product/priv-app/Tips
 product/priv-app/MainlineScf
-product/priv-app/SamsungCloud
 product/priv-app/Upday
 "
 
