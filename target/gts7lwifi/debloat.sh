@@ -3,7 +3,9 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 #
 
-# 1. System 파티션 (맨 앞 system/ 유지 및 고용량 추가)
+# ==========================================
+# 1. System 파티션 디블로트 (system/ 명시 필수)
+# ==========================================
 SYSTEM_DEBLOAT+="
 system/app/BixbyWakeUp
 system/app/KidsHome_Alpha
@@ -35,7 +37,11 @@ system/etc/init/dhkprov.rc
 system/lib64/vendor.samsung.hardware.security.hdcp.keyprovisioning@1.0.so
 "
 
-# 2. Product 파티션 (맨 앞 product/ 붙이기)
+# ==========================================
+# 2. Product 파티션 디블로트 (product/ 명시 필수)
+# ==========================================
+# 여기가 지금 822MB로 터지기 직전인 주범 구역이야. 
+# 이번엔 경로 다 맞췄으니 구글 Velvet이랑 삼멤 제대로 찢길 거임.
 PRODUCT_DEBLOAT+="
 product/app/Maps
 product/app/YouTube
@@ -64,7 +70,10 @@ product/priv-app/SamsungCloud
 product/priv-app/Upday
 "
 
-# 3. System_ext 영역 (맨 앞 system_ext/ 붙이기)
+# ==========================================
+# 3. System_ext 파티션 디블로트 (system_ext/ 명시 필수)
+# ==========================================
+# 전 개발자가 경로 빼먹어서 찌꺼기 남던 하단 클린업 중복 코드 통합 정리완료.
 SYSTEM_EXT_DEBLOAT+="
 system_ext/etc/permissions/com.qti.location.sdk.xml
 system_ext/etc/permissions/com.qualcomm.location.xml
@@ -72,31 +81,4 @@ system_ext/etc/permissions/privapp-permissions-com.qualcomm.location.xml
 system_ext/framework/com.qti.location.sdk.jar
 system_ext/priv-app/com.qualcomm.location
 system_ext/priv-app/Pluspot
-"
-
-# 4. Overlays
-SYSTEM_DEBLOAT+="
-system/app/WifiRROverlayAppLls
-"
-
-# 5. mAFPC
-SYSTEM_DEBLOAT+="
-system/bin/mafpc_write
-"
-
-# 6. HDCP
-SYSTEM_DEBLOAT+="
-system/bin/dhkprov
-system/bin/qchdcpkprov
-system/etc/init/dhkprov.rc
-system/lib64/vendor.samsung.hardware.security.hdcp.keyprovisioning@1.0.so
-"
-
-# 7. system_ext clean-up
-SYSTEM_EXT_DEBLOAT+="
-etc/permissions/com.qti.location.sdk.xml
-etc/permissions/com.qualcomm.location.xml
-etc/permissions/privapp-permissions-com.qualcomm.location.xml
-framework/com.qti.location.sdk.jar
-priv-app/com.qualcomm.location
 "
