@@ -153,6 +153,7 @@ if $BUILD_ROM; then
 fi
 
 ### 🛠️ DYNAMIC PARTITION AUTO SCRIPT START ###
+# [구조 정형화] 빌드 스킵 여부와 상관없이, ZIP이 구워지기 직전이라면 언제나 실시간 용량 측정 수행!
 LOG_STEP_IN true "Generating Dynamic Partition tools for Tab S7"
 
 # 키친 툴 내부의 lpmake 도구 위치 정의
@@ -171,32 +172,18 @@ LPMAKE_BIN="$SRC_DIR/scripts/bin/lpmake"
     --partition odm:readonly:0:qti_dynamic_partitions \
     --output "$WORK_DIR/super_empty.img" || exit 1
 
-# 2. 각 파티션 이미지 크기 강제 스캔 및 디버깅 루틴
-# UN1CA 키친 버전에 따라 파일이 주입되는 멀티 경로 후보군 싹 다 지정
+# 2. 각 파티션 이미지의 실시간 순수 크기 측정
+SYSTEM_IMG="$WORK_DIR/system.img"
+VENDOR_IMG="$WORK_DIR/vendor.img"
+PRODUCT_IMG="$WORK_DIR/product.img"
+ODM_IMG="$WORK_DIR/odm.img"
+
 SYSTEM_SIZE=0; VENDOR_SIZE=0; PRODUCT_SIZE=0; ODM_SIZE=0
 
-get_img_size() {
-    local img_name="$1"
-    # 1순위: WORK_DIR 루트, 2순위: WORK_DIR/OTA, 3순위: OUT_DIR 등 매핑 검사
-    if [ -f "$WORK_DIR/$img_name" ]; then
-        stat -c%s "$WORK_DIR/$img_name"
-    elif [ -f "$WORK_DIR/OTA/$img_name" ]; then
-        stat -c%s "$WORK_DIR/OTA/$img_name"
-    elif [ -f "$SRC_DIR/target/$TARGET_CODENAME/$img_name" ]; then
-        stat -c%s "$SRC_DIR/target/$TARGET_CODENAME/$img_name"
-    else
-        echo 0
-    fi
-}
-
-SYSTEM_SIZE=$(get_img_size "system.img")
-VENDOR_SIZE=$(get_img_size "vendor.img")
-PRODUCT_SIZE=$(get_img_size "product.img")
-ODM_SIZE=$(get_img_size "odm.img")
-
-# [⚠️ 터미널 디버깅용 안내 문자 출력] 용량이 0으로 잡히는지 검사하기 위함
-LOGI "--- Extracted Image Sizes (Raw Bytes) ---"
-LOGI "System: $SYSTEM_SIZE | Vendor: $VENDOR_SIZE | Product: $PRODUCT_SIZE | ODM: $ODM_SIZE"
+[ -f "$SYSTEM_IMG" ] && SYSTEM_SIZE=$(stat -c%s "$SYSTEM_IMG")
+[ -f "$VENDOR_IMG" ] && VENDOR_SIZE=$(stat -c%s "$VENDOR_IMG")
+[ -f "$PRODUCT_IMG" ] && PRODUCT_SIZE=$(stat -c%s "$PRODUCT_IMG")
+[ -f "$ODM_IMG" ] && ODM_SIZE=$(stat -c%s "$ODM_IMG")
 
 # 안전 마진 버퍼 추가 (30MB)
 BUFFER=31457280
@@ -218,7 +205,7 @@ echo "resize vendor $VENDOR_SIZE" >> "$OP_LIST"
 echo "resize product $PRODUCT_SIZE" >> "$OP_LIST"
 echo "resize odm $ODM_SIZE" >> "$OP_LIST"
 
-# 4. ZIP 패키징 툴 내부로 산출물 전달 링크
+# 4. ZIP 패키징 툴 연동을 위한 사전 이식 처리
 if [ -d "$WORK_DIR/OTA" ]; then
     cp "$WORK_DIR/super_empty.img" "$WORK_DIR/OTA/"
     cp "$WORK_DIR/dynamic_partitions_op_list" "$WORK_DIR/OTA/"
@@ -227,3 +214,29 @@ fi
 LOGI "super_empty.img and dynamic_partitions_op_list generated successfully."
 LOG_STEP_OUT
 ### 🛠️ DYNAMIC PARTITION AUTO SCRIPT END ###
+
+if $BUILD_TARGET_FILES || $BUILD_FLASHABLE_ZIP; then
+    ZIP_FILE_NAME="${TARGET_CODENAME}_"
+    if [ "$(GET_PROP "system" "ro.unica.version")" ]; then
+        ZIP_FILE_NAME+="$(GET_PROP "system" "ro.unica.version")"
+    else
+        ZIP_FILE_NAME+="$ROM_VERSION"
+    fi
+    ZIP_FILE_NAME+="-target_files.zip"
+
+    if [ ! -f "$OUT_DIR/$ZIP_FILE_NAME" ]; then
+        LOG_STEP_IN true "Creating target-files zip"
+        "$SRC_DIR/scripts/internal/create_target_files_zip.sh" "$OUT_DIR/$ZIP_FILE_NAME" || exit 1
+        LOG_STEP_OUT
+    else
+        LOGW "File already exists: ${OUT_DIR//$SRC_DIR\//}/$ZIP_FILE_NAME"
+    fi
+
+    if $BUILD_FLASHABLE_ZIP; then
+        LOG_STEP_IN true "Creating flashable zip"
+        "$SRC_DIR/scripts/build_flashable_zip.sh" "$OUT_DIR/$ZIP_FILE_NAME" || exit 1
+        LOG_STEP_OUT
+    fi
+fi
+
+exit 0
