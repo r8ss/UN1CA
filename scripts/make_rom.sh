@@ -156,9 +156,9 @@ fi
 if $BUILD_ROM; then
     LOG_STEP_IN true "Generating Dynamic Partition tools for Tab S7"
 
-    # 키친 툴 내부의 lpmake 도구 위치 정의 (UN1CA 기본 bin 폴더 내의 실행파일 확인 필요)
+    # 키친 툴 내부의 lpmake 도구 위치 정의
     LPMAKE_BIN="$SRC_DIR/scripts/bin/lpmake"
-    [ ! -f "$LPMAKE_BIN" ] && LPMAKE_BIN="lpmake" # 시스템 패스에 잡혀있을 경우 대비
+    [ ! -f "$LPMAKE_BIN" ] && LPMAKE_BIN="lpmake"
 
     # 1. super_empty.img 자동 빌드 (탭 S7 물리 규격 고정값 적용)
     "$LPMAKE_BIN" \
@@ -172,18 +172,19 @@ if $BUILD_ROM; then
         --partition odm:readonly:0:qti_dynamic_partitions \
         --output "$WORK_DIR/super_empty.img" || exit 1
 
-    # 2. 패키징 완료된 각 파티션 이미지의 순수 크기 측정 (바이트 단위)
-    # UN1CA 작업 디렉토리 경로에 맞게 이미지 파일 존재 여부 체크 후 변수 할당
+    # 2. 패키징 완료된 각 파티션 이미지의 순수 크기 측정 (버그 수정 완)
     SYSTEM_IMG="$WORK_DIR/system.img"
     VENDOR_IMG="$WORK_DIR/vendor.img"
     PRODUCT_IMG="$WORK_DIR/product.img"
     ODM_IMG="$WORK_DIR/odm.img"
 
-    # 이미지 크기 읽어오기 (파일이 없으면 0으로 처리)
-    SYSTEM_SIZE=[ -f "$SYSTEM_IMG" ] && stat -c%s "$SYSTEM_IMG" || echo 0
-    VENDOR_SIZE=[ -f "$VENDOR_IMG" ] && stat -c%s "$VENDOR_IMG" || echo 0
-    PRODUCT_SIZE=[ -f "$PRODUCT_IMG" ] && stat -c%s "$PRODUCT_IMG" || echo 0
-    ODM_SIZE=[ -f "$ODM_IMG" ] && stat -c%s "$ODM_IMG" || echo 0
+    SYSTEM_SIZE=0; VENDOR_SIZE=0; PRODUCT_SIZE=0; ODM_SIZE=0
+
+    # 안전하게 인라인 대괄호 문법으로 실시간 바이트 값 추출
+    [ -f "$SYSTEM_IMG" ] && SYSTEM_SIZE=$(stat -c%s "$SYSTEM_IMG")
+    [ -f "$VENDOR_IMG" ] && VENDOR_SIZE=$(stat -c%s "$VENDOR_IMG")
+    [ -f "$PRODUCT_IMG" ] && PRODUCT_SIZE=$(stat -c%s "$PRODUCT_IMG")
+    [ -f "$ODM_IMG" ] && ODM_SIZE=$(stat -c%s "$ODM_IMG")
 
     # 안전 마진 버퍼 추가 (여유 공간 약 30MB 강제 할당하여 플래싱 여유 확보)
     BUFFER=31457280
@@ -205,10 +206,12 @@ if $BUILD_ROM; then
     echo "resize product $PRODUCT_SIZE" >> "$OP_LIST"
     echo "resize odm $ODM_SIZE" >> "$OP_LIST"
 
-    # 4. 최종 ZIP에 묶이도록 빌드 타겟 경로에 복사 처리
-    # (UN1CA의 스크립트 특성상 create_target_files_zip.sh 내부나 
-    # 혹은 플래시 가능한 zip 루트 경로(예: META-INF가 있는 곳)에 삽입되도록 연동해 줘야 함)
-    # 일단 생성 완료 로그 출력
+    # 4. ZIP 패키징 툴 연동을 위한 사전 이식 처리
+    if [ -d "$WORK_DIR/OTA" ]; then
+        cp "$WORK_DIR/super_empty.img" "$WORK_DIR/OTA/"
+        cp "$WORK_DIR/dynamic_partitions_op_list" "$WORK_DIR/OTA/"
+    fi
+
     LOGI "super_empty.img and dynamic_partitions_op_list generated successfully."
     LOG_STEP_OUT
 fi
