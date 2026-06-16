@@ -19,7 +19,7 @@ vpu30_4v.mbn
 SET_METADATA "odm" "firmware" 0 0 755 "u:object_r:vendor_firmware_file:s0"
 
 for blob in $BLOBS; do
-    ADD_TO_WORK_DIR "${TARGET_CODENAME}ksx" "odm" "firmware/$blob" 0 0 644 "u:object_r:vendor_firmware_file:s0"
+    ADD_TO_WORK_DIR "${TARGET_CODENAME}" "odm" "firmware/$blob" 0 0 644 "u:object_r:vendor_firmware_file:s0"
 done
 
 SET_METADATA "vendor" "etc/init/hw/init.samsung.firmware.rc" 0 0 644 "u:object_r:vendor_configs_file:s0"
