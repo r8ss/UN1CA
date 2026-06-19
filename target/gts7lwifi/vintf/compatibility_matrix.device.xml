@@ -7,14 +7,23 @@
             <instance>default</instance>
         </interface>
     </hal>
-    <hal format="hidl">
+
+    <hal format="aidl">
         <name>android.hardware.boot</name>
-        <version>1.2</version>
         <interface>
             <name>IBootControl</name>
             <instance>default</instance>
         </interface>
     </hal>
+    <hal format="hidl">
+        <name>android.hardware.boot</name>
+        <version>1.0-2</version>
+        <interface>
+            <name>IBootControl</name>
+            <instance>default</instance>
+        </interface>
+    </hal>
+
     <sepolicy>
         <kernel-sepolicy-version>30</kernel-sepolicy-version>
         <sepolicy-version>29.0</sepolicy-version>
@@ -23,7 +32,10 @@
         <sepolicy-version>32.0</sepolicy-version>
         <sepolicy-version>33.0</sepolicy-version>
         <sepolicy-version>34.0</sepolicy-version>
+        <sepolicy-version>35.0</sepolicy-version>
+        <sepolicy-version>36.0</sepolicy-version>
     </sepolicy>
+
     <avb>
         <vbmeta-version>1.0</vbmeta-version>
     </avb>
