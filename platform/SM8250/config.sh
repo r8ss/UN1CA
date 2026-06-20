@@ -14,13 +14,13 @@ case "$TARGET_CODENAME" in
         # ==========================================
         # Galaxy Tab S7 / S7+ (WiFi) Porting Target
         # ==========================================
-        
+
         # OS & Base Specification (Tab S8 Base Dynamic Configuration)
         SOURCE_FIRMWARE="SM-X800/KOO/R54W100KMDT"
         SOURCE_EXTRA_FIRMWARES=()
         SOURCE_SUPER_GROUP_NAME="qti_dynamic_partitions"
         SOURCE_HAS_SYSTEM_EXT=true
-        
+
         # API Level Matching
         SOURCE_PLATFORM_SDK_VERSION=36
         SOURCE_BOARD_API_LEVEL=34
@@ -34,6 +34,7 @@ case "$TARGET_CODENAME" in
         TARGET_BOARD_API_LEVEL=30
 
         # Dynamic Partitions Geometry
+        TARGET_USE_DYNAMIC_PARTITIONS=true
         TARGET_SUPER_PARTITION_SIZE=10292822016
         TARGET_QTI_DYNAMIC_PARTITIONS_SIZE=10288627712
 
