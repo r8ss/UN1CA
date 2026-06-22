@@ -1,5 +1,3 @@
-SKIPUNZIP=1
-
 SET_PROP_IF_DIFF "vendor" "ro.oem_unlock_supported" "0"
 
 # Better device/model detection in CoreRune
@@ -26,9 +24,3 @@ SMALI_PATCH "system" "system/framework/services.jar" \
     '<clinit>()V' \
     'ro.product.model' \
     'ro.product.vendor.model'
-
-# Disable vendor mismatch warning
-SMALI_PATCH "system" "system/framework/services.jar" \
-    "smali/com/android/server/am/ActivityManagerService\$\$ExternalSyntheticLambda6.smali" "replaceall" \
-    "Build fingerprint is not consistent, warning user" \
-    "Build fingerprint is not consistent"
