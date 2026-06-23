@@ -14,6 +14,7 @@ find_smali_file() {
     local target_jar="$1"     # 예: "system/framework/framework.jar"
     local fallback_path="$2"  # 기존 하드코딩 주소 (예: smali_classes4/...)
     local file_name           # 파일명 추출용
+    local found
 
     file_name=$(basename "$fallback_path")
 
@@ -21,8 +22,8 @@ find_smali_file() {
     local real_search_path="$APKTOOL_DIR/$target_jar"
 
     if [ -d "$real_search_path" ]; then
-        local found
-        found=$(find "$real_search_path" -name "$file_name" | head -n 1)
+        # -print -quit으로 매칭되는 첫 파일 탐색 후 즉시 종료 (성능 최적화 및 안정성)
+        found=$(find "$real_search_path" -type f -name "$file_name" -print -quit)
         if [ -n "$found" ]; then
             # APKTOOL_DIR/target_jar 부분을 떼어내고 패치 툴이 인식하는 가상 주소로 치환
             echo "${found#$APKTOOL_DIR/$target_jar/}"
@@ -229,10 +230,12 @@ if ! $SOURCE_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL; then
 
         SET_FLOATING_FEATURE_CONFIG "SEC_FLOATING_FEATURE_COMMON_CONFIG_DYN_RESOLUTION_CONTROL" "WQHD,FHD,HD"
 
-        ADD_TO_WORK_DIR "$([[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] && echo "b0qxxx" || echo "b0sxxx")" \
-            "system" "system/bin/bootanimation" 0 2000 755 "u:object_r:bootanim_exec:s0"
-        ADD_TO_WORK_DIR "$([[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] && echo "b0qxxx" || echo "b0sxxx")" \
-            "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
+        # 인라인 평가식 안정성 보정
+        local ssi_target="b0sxxx"
+        [[ "$TARGET_OS_SINGLE_SYSTEM_IMAGE" == "qssi" ]] && ssi_target="b0qxxx"
+
+        ADD_TO_WORK_DIR "$ssi_target" "system" "system/bin/bootanimation" 0 2000 755 "u:object_r:bootanim_exec:s0"
+        ADD_TO_WORK_DIR "$ssi_target" "system" "system/bin/surfaceflinger" 0 2000 755 "u:object_r:surfaceflinger_exec:s0"
         ADD_TO_WORK_DIR "b0qxxx" "system" "system/media/battery_error.spi" 0 0 644 "u:object_r:system_file:s0"
         ADD_TO_WORK_DIR "b0qxxx" "system" "system/media/battery_low.spi" 0 0 644 "u:object_r:system_file:s0"
         ADD_TO_WORK_DIR "b0qxxx" "system" "system/media/battery_protection.spi" 0 0 644 "u:object_r:system_file:s0"
@@ -354,32 +357,35 @@ fi
 # SEC_PRODUCT_FEATURE_FINGERPRINT_CONFIG_SENSOR
 # ----------------------------------------------------------------------------------------
 if [[ "$SOURCE_FINGERPRINT_CONFIG_SENSOR" != "$TARGET_FINGERPRINT_CONFIG_SENSOR" ]]; then
+    # 패치 전 원본 소스 캐싱 확보 (변수 오염 방지)
+    local _src_sensor_orig="$SOURCE_FINGERPRINT_CONFIG_SENSOR"
+
     target_path=$(find_smali_file "system/framework/framework.jar" "smali_classes6/com/samsung/android/bio/fingerprint/SemFingerprintManager.smali")
     SMALI_PATCH "system" "system/framework/framework.jar" \
         "$target_path" "replace" \
         "getMaxTemplateNumberFromSPF()I" \
-        "$SOURCE_FINGERPRINT_CONFIG_SENSOR" \
+        "$_src_sensor_orig" \
         "$TARGET_FINGERPRINT_CONFIG_SENSOR"
     SMALI_PATCH "system" "system/framework/framework.jar" \
         "$target_path" "replace" \
         "getProductFeatureValue(Landroid/content/Context;)Ljava/lang/String;" \
-        "$SOURCE_FINGERPRINT_CONFIG_SENSOR" \
+        "$_src_sensor_orig" \
         "$TARGET_FINGERPRINT_CONFIG_SENSOR"
 
     target_path=$(find_smali_file "system/framework/framework.jar" "smali_classes6/com/samsung/android/bio/fingerprint/SemFingerprintManager\$Characteristics.smali")
     SMALI_PATCH "system" "system/framework/framework.jar" \
         "$target_path" "replaceall" \
-        "$SOURCE_FINGERPRINT_CONFIG_SENSOR" \
+        "$_src_sensor_orig" \
         "$TARGET_FINGERPRINT_CONFIG_SENSOR"
 
     target_path=$(find_smali_file "system/priv-app/SecSettings/SecSettings.apk" "smali_classes4/com/samsung/android/settings/biometrics/fingerprint/FingerprintSettingsUtils.smali")
     SMALI_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
         "$target_path" "replaceall" \
-        "$SOURCE_FINGERPRINT_CONFIG_SENSOR" \
+        "$_src_sensor_orig" \
         "$TARGET_FINGERPRINT_CONFIG_SENSOR"
 
-    if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$SOURCE_FINGERPRINT_CONFIG_SENSOR")" != "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" ]]; then
-        if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$SOURCE_FINGERPRINT_CONFIG_SENSOR")" == "ultrasonic" ]]; then
+    if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$_src_sensor_orig")" != "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" ]]; then
+        if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$_src_sensor_orig")" == "ultrasonic" ]]; then
             if [[ "$(GET_FINGERPRINT_SENSOR_TYPE "$TARGET_FINGERPRINT_CONFIG_SENSOR")" == "optical" ]]; then
                 SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_display_optical,settings=3"
 
@@ -518,12 +524,12 @@ if [[ "$SOURCE_FINGERPRINT_CONFIG_SENSOR" != "$TARGET_FINGERPRINT_CONFIG_SENSOR"
         fi
     fi
 
-    if [[ "$SOURCE_FINGERPRINT_CONFIG_SENSOR" != "$TARGET_FINGERPRINT_CONFIG_SENSOR" ]]; then
+    if [[ "$_src_sensor_orig" != "$TARGET_FINGERPRINT_CONFIG_SENSOR" ]]; then
         target_path=$(find_smali_file "system/priv-app/BiometricSetting/BiometricSetting.apk" "smali/com/samsung/android/biometrics/app/setting/DisplayStateManager.smali")
         SMALI_PATCH "system" "system/priv-app/BiometricSetting/BiometricSetting.apk" \
             "$target_path" "replace" \
             "<init>(Lcom/samsung/android/biometrics/app/setting/BiometricsUIService;)V" \
-            "$SOURCE_FINGERPRINT_CONFIG_SENSOR" \
+            "$_src_sensor_orig" \
             "$TARGET_FINGERPRINT_CONFIG_SENSOR"
     fi
 fi
@@ -902,7 +908,7 @@ if [[ "$SOURCE_WLAN_CONFIG_CPU_CSTATE_DISABLE_THRESHOLD" != "$TARGET_WLAN_CONFIG
             "$MODPATH/wifi/thresholds/semwifi-service.jar/0001-Allow-custom-booster-thresholds-values.patch"
 
         target_path=$(find_smali_file "system/framework/semwifi-service.jar" "smali/com/samsung/android/server/wifi/SemFrameworkFacade.smali")
-        
+
         # sed 인라인 치환 방식으로 완전히 로직 분리 및 안정화
         SMALI_PATCH "system" "system/framework/semwifi-service.jar" \
             "$target_path" "replace" \
@@ -1031,7 +1037,7 @@ if [[ "$SOURCE_WLAN_CONFIG_CONNECTION_PERSONALIZATION" != "$TARGET_WLAN_CONFIG_C
             "<init>(Landroid/content/Context;)V" \
             "$SOURCE_WLAN_CONFIG_CONNECTION_PERSONALIZATION" \
             "$TARGET_WLAN_CONFIG_CONNECTION_PERSONALIZATION"
-            
+
         APPLY_PATCH "system" "system/priv-app/SecSettings/SecSettings.apk" \
             "$MODPATH/wifi/connection_personalization/SecSettings.apk/0001-Allow-custom-CONNECTION_PERSONALIZATION-value.patch"
 
