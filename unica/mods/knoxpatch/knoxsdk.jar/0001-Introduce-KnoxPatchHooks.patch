@@ -13,15 +13,15 @@ index e04e52e..0e88e67 100644
 +++ b/smali/com/samsung/android/knox/EnterpriseDeviceManager.smali
 @@ -600,29 +600,11 @@
  .end method
- 
+
  .method public static greylist getAPILevel()I
 -    .locals 2
 +    .locals 1
- 
+
 -    :try_start_0
 -    invoke-static {}, Lcom/samsung/android/knox/EdmUtils;->getAPILevelForInternal()I
 +    invoke-static {}, Lio/mesalabs/unica/KnoxPatchHooks;->onEDMGetAPILevel()I
- 
+
      move-result v0
 -    :try_end_0
 -    .catch Ljava/lang/UnsupportedOperationException; {:try_start_0 .. :try_end_0} :catch_0
@@ -40,9 +40,8 @@ index e04e52e..0e88e67 100644
 -    invoke-static {v1, v0}, Landroid/util/Log;->e(Ljava/lang/String;Ljava/lang/String;)I
 -
 -    const/4 v0, 0x0
- 
+
      return v0
  .end method
 -- 
 2.51.0
-
