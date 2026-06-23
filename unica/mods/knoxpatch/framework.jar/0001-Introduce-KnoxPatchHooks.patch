@@ -16,13 +16,13 @@ index 3af84b7b..7d5d50e4 100644
 +++ b/smali_classes3/android/os/SystemProperties.smali
 @@ -373,10 +373,19 @@
  .end method
- 
+
  .method public static whitelist get(Ljava/lang/String;)Ljava/lang/String;
 -    .locals 0
 +    .locals 1
      .annotation runtime Landroid/annotation/SystemApi;
      .end annotation
- 
+
 +    invoke-static {p0}, Lio/mesalabs/unica/KnoxPatchHooks;->onSystemPropertiesGet(Ljava/lang/String;)Ljava/lang/String;
 +
 +    move-result-object v0
@@ -33,17 +33,17 @@ index 3af84b7b..7d5d50e4 100644
 +
 +    :cond_0
      invoke-static {p0}, Landroid/os/SystemProperties;->native_get(Ljava/lang/String;)Ljava/lang/String;
- 
+
      move-result-object p0
 @@ -385,10 +394,19 @@
  .end method
- 
+
  .method public static whitelist get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
 -    .locals 0
 +    .locals 1
      .annotation runtime Landroid/annotation/SystemApi;
      .end annotation
- 
+
 +    invoke-static {p0}, Lio/mesalabs/unica/KnoxPatchHooks;->onSystemPropertiesGet(Ljava/lang/String;)Ljava/lang/String;
 +
 +    move-result-object v0
@@ -54,7 +54,7 @@ index 3af84b7b..7d5d50e4 100644
 +
 +    :cond_0
      invoke-static {p0, p1}, Landroid/os/SystemProperties;->native_get(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;
- 
+
      move-result-object p0
 diff --git a/smali_classes6/io/mesalabs/unica/KnoxPatchHooks.smali b/smali_classes6/io/mesalabs/unica/KnoxPatchHooks.smali
 new file mode 100644
@@ -333,4 +333,3 @@ index 00000000..8b68148a
 +.end method
 -- 
 2.54.0
-
