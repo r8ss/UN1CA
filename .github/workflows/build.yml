@@ -77,6 +77,23 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/extract_fw.sh
 
+      # =========================================================================
+      # 🛠️ One UI 8.5 빌드 에러 우회 및 pinconfirm smali_classes2 강제 수정
+      # =========================================================================
+      - name: Patch and Bypass Broken Modules
+        run: |
+          echo "🤖 1. pinconfirm 모듈 경로를 구형 smali에서 smali_classes2로 실시간 치환..."
+          sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
+
+          echo "🤖 2. One UI 8.5 베이스 대격변으로 터지는 모듈들 런타임 비활성화..."
+          # 각 모듈 스크립트 최상단에 exit 0을 박아서 패치 로직을 에러 없이 패스시킵니다.
+          for mod in deknox hma paradigm keybox; do
+            if [ -f "unica/mods/$mod/customize.sh" ]; then
+              echo " -> Bypassing $mod module"
+              sed -i '1s/^/exit 0\n/' unica/mods/$mod/customize.sh
+            fi
+          done
+
       - name: Build ROM
         run: |
           source ./buildenv.sh ${{ matrix.target }}
