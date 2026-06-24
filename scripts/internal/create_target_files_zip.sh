@@ -160,6 +160,26 @@ if [ -d "$WORK_DIR/kernel" ]; then
     done
 fi
 
+# ====================================================================
+# [Bypass] 8.0 순정 버전 vbmeta / dtbo 강제 주입 우회 기믹
+# ====================================================================
+LOG "- Injecting device-specific bootloader bypass images"
+
+# 1. vbmeta.img 강제 치환
+if [ -f "$SRC_DIR/target/$TARGET_CODENAME/vbmeta.img.lz4" ]; then
+    EVAL "lz4 -df \"$SRC_DIR/target/$TARGET_CODENAME/vbmeta.img.lz4\" \"$TMP_DIR/vbmeta.img\"" || exit 1
+elif [ -f "$SRC_DIR/target/$TARGET_CODENAME/vbmeta.img" ]; then
+    EVAL "cp -a \"$SRC_DIR/target/$TARGET_CODENAME/vbmeta.img\" \"$TMP_DIR/vbmeta.img\"" || exit 1
+fi
+
+# 2. dtbo.img 강제 치환
+if [ -f "$SRC_DIR/target/$TARGET_CODENAME/dtbo.img.lz4" ]; then
+    EVAL "lz4 -df \"$SRC_DIR/target/$TARGET_CODENAME/dtbo.img.lz4\" \"$TMP_DIR/dtbo.img\"" || exit 1
+elif [ -f "$SRC_DIR/target/$TARGET_CODENAME/dtbo.img" ]; then
+    EVAL "cp -a \"$SRC_DIR/target/$TARGET_CODENAME/dtbo.img\" \"$TMP_DIR/dtbo.img\"" || exit 1
+fi
+# ====================================================================
+
 LOG "- Generating build_info.txt"
 GENERATE_BUILD_INFO
 
