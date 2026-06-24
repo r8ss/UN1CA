@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [dm1q,gts7lwifi,dm3q]
+        target: [dm1q,dm3q]
 
     steps:
       - name: Checkout repo
