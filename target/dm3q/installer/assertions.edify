@@ -1,1 +1,0 @@
-is_substring("S918NKS", getprop("ro.boot.bootloader")) && verify_no_downgrade(getprop("ro.boot.bootloader"), "S918NKSS6EZA1") && abort("E3003: This package requires Android 16 firmware.");
