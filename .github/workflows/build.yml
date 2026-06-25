@@ -1,4 +1,4 @@
-Name: Build
+name: Build
 
 on:
   workflow_dispatch:
@@ -18,7 +18,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # [수정] S23 Ultra (dm3q) 제거, S23 노멀 (dm1q)만 단독 빌드 세팅
         target: [dm1q]
 
     steps:
@@ -69,26 +68,23 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [수정] 다운로드 스크립트 우회 및 구글 드라이브 고유 링크 펌웨어 강제 주입
+      # 🚀 [교정 완료] 싱글 폴더 주입 및 수동 우회 로직 (YAML 인덴트 검증 완료)
       # =========================================================================
-      - name: Set up Firmware Directories & Install gdown
+      - name: Set up Firmware Directory & Install gdown
         run: |
-          # 빌더가 혼선 없이 압축을 해제하도록 소스(8.5)와 타겟(8.0) 전용 디렉토리 생성
-          mkdir -p src/firmware/SOURCE_S911N_KOO
-          mkdir -p src/firmware/TARGET_S911N_KOO
+          rm -rf src/firmware/SM-S911N_KOO
+          mkdir -p src/firmware/SM-S911N_KOO
           pip install gdown
 
-      - name: Inject Source Firmware (One UI 8.5 최신 베이스)
+      - name: Inject Source Firmware (One UI 8.5)
         run: |
-          echo "📥 구글 드라이브로부터 포팅 베이스가 될 8.5 순정 펌웨어 다운로드 중..."
-          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SOURCE_S911N_KOO/SM-S911N_5_8.5_stock_fac.zip
+          echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
+          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
 
-      - name: Inject Target Firmware (One UI 8.0 v8 내 폰 빌드용)
+      - name: Inject Target Firmware (One UI 8.0 v8)
         run: |
-          echo "📥 구글 드라이브로부터 디바이스 타겟이 될 8.0 v8 순정 펌웨어 다운로드 중..."
-          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/TARGET_S911N_KOO/SM-S911N_5_8.0_v8_fac.zip
-
-      # 원래 존재하던 삼성 FOTA 서버 다운로드 세션 단계는 완벽하게 무력화 및 삭제 (Bypass 완료)
+          echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
+          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
 
       - name: Extract stock firmwares
         run: |
@@ -140,6 +136,5 @@ jobs:
           DOWNLOAD_LINK=$(curl -# -F "file=@$ROM_FILE" "https://${SERVER}.gofile.io/uploadFile" | jq -r '.data.downloadPage')
           echo "===================================================="
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
-          echo " 디바이스 타겟: ${{ matrix.target }}"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
           echo "===================================================="
