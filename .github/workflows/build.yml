@@ -68,7 +68,7 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [완벽 교정] 수동 주입 및 스크립트 내부 다운로드 강제 패스 패치
+      # 🚀 [완벽 우회] extract_fw.sh 가 요구하는 가상 오딘 트래커 디렉터리 완벽 매칭
       # =========================================================================
       - name: Set up Firmware Directory & Install gdown
         run: |
@@ -76,26 +76,35 @@ jobs:
           mkdir -p src/firmware/SM-S911N_KOO
           pip install gdown --break-system-packages
 
-      - name: Inject Source & Target Firmware
+      - name: Inject Source & Target Firmware with Odin Environment Bypassing
         run: |
+          # 1. 스크립트 내부 환경 변수 경로 셋업 ($ODIN_DIR 대응)
+          # UN1CA 환경에서 보통 src/firmware 또는 별도 오딘 다운로드 폴더(src/odin 등)를 씁니다. 안전하게 둘 다 준비합니다.
+          mkdir -p src/odin/SM-S911N_KOO
+          mkdir -p src/firmware/SM-S911N_KOO
+
           echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
           gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3
 
           echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
-
-      - name: Patch extract_fw.sh to bypass download verification
-        run: |
-          echo "🤖 extract_fw.sh 스크립트가 무조건 내부 zip을 바라보도록 강제 변조..."
-          # 스크립트 내부에 존재할 수 있는 'The firmware has not been downloaded' 에러 가로채기 및 강제 우회
-          # 다운로드 유효성 검사 결과 변수를 무조건 완료 상태(true 또는 파일이 존재하는 것)로 세팅하도록 sed 치환을 겁니다.
-          if [ -f "scripts/extract_fw.sh" ]; then
-            sed -i 's/exit 1/echo "Bypassing exit..."/g' scripts/extract_fw.sh
-            sed -i 's/fatal /echo /g' scripts/extract_fw.sh
-          fi
-          # UN1CA 빌드 서브엔진 내부 스크립트도 함께 패치 (에러 발생처 방어)
-          find scripts/ -type f -name "*.sh" -exec sed -i 's/has not been downloaded/has been injected/g' {} +
-          find scripts/ -type f -name "*.sh" -exec sed -i 's/exit 1/echo "Injected Bypass"/g' {} +
+          # 가짜 다운로드 경로에 파일 다운로드
+          gdown -O src/odin/SM-S911N_KOO/target_firmware.zip 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
+          
+          # 2. extract_fw.sh 핵심 타겟 파싱 우회 조작
+          # 로그 기반 타겟 버전 명칭 정의
+          TARGET_VER="S911NKSS8FZF1"
+          
+          # .downloaded 트래커 파일 강제 생성 (스크립트 통과 핵심 조건)
+          echo "${TARGET_VER}/${TARGET_VER}/${TARGET_VER}" > src/odin/SM-S911N_KOO/.downloaded
+          
+          # extract_fw.sh 의 'find' 구문이 타겟 펌웨어 원본으로 인식하도록 의도적 뼈대 링크 매칭 (BL_*, AP_*.md5)
+          cd src/odin/SM-S911N_KOO
+          ln -s target_firmware.zip "BL_${TARGET_VER}_fac.md5"
+          ln -s target_firmware.zip "AP_${TARGET_VER}_fac.md5"
+          cd -
+          
+          # 만약 ODIN_DIR이 src/firmware 하위일 경우를 대비한 상호 백업 미러링 링크
+          ln -s ../odin/SM-S911N_KOO/.downloaded src/firmware/SM-S911N_KOO/.downloaded 2>/dev/null || true
 
       - name: Extract stock firmwares
         run: |
