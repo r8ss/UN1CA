@@ -46,7 +46,7 @@ jobs:
         run: |
           sudo apt update
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
-            7zip attr ccache clang ffmpeg \
+            7zip attr ccache clang ffmpeg jq \
             libbrotli-dev libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
             libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp
           sudo modprobe erofs f2fs
@@ -68,23 +68,23 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [교정 완료] 싱글 폴더 주입 및 수동 우회 로직 (YAML 인덴트 검증 완료)
+      # 🚀 [교정 완료] 싱글 폴더 주입 및 수동 우회 로직 (pip 우회 플래그 반영)
       # =========================================================================
       - name: Set up Firmware Directory & Install gdown
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
-          pip install gdown
+          pip install gdown --break-system-packages
 
       - name: Inject Source Firmware (One UI 8.5)
         run: |
           echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
-          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
+          gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3
 
       - name: Inject Target Firmware (One UI 8.0 v8)
         run: |
           echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
+          gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
 
       - name: Extract stock firmwares
         run: |
@@ -92,20 +92,14 @@ jobs:
           ./scripts/extract_fw.sh
 
       # =========================================================================
-      # 🛠️ One UI 8.5 빌드 에러 우회 및 pinconfirm smali_classes2 강제 수정
+      # 🛠️ One UI 8.5 빌드 패치 및 모듈 활성화 유지
       # =========================================================================
       - name: Patch and Bypass Broken Modules
         run: |
           echo "🤖 1. pinconfirm 모듈 경로를 구형 smali에서 smali_classes2로 실시간 치환..."
           sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
 
-          echo "🤖 2. One UI 8.5 베이스 대격변으로 터지는 모듈들 런타임 비활성화..."
-          for mod in deknox hma paradigm keybox; do
-            if [ -f "unica/mods/$mod/customize.sh" ]; then
-              echo " -> Bypassing $mod module"
-              sed -i '1s/^/exit 0\n/' unica/mods/$mod/customize.sh
-            fi
-          done
+          echo "🤖 2. 모듈 비활성화 스킵 (deknox, hma, paradigm, keybox 빌드 포함)"
 
       - name: Build ROM
         run: |
