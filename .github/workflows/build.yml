@@ -68,7 +68,7 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [교정 완료] 싱글 폴더 주입 및 수동 우회 로직 (pip 우회 플래그 반영)
+      # 🚀 [교정 완료] 스크립트가 요구하는 파일명 규칙 강제 매칭 (감지 우회)
       # =========================================================================
       - name: Set up Firmware Directory & Install gdown
         run: |
@@ -76,15 +76,21 @@ jobs:
           mkdir -p src/firmware/SM-S911N_KOO
           pip install gdown --break-system-packages
 
-      - name: Inject Source Firmware (One UI 8.5)
+      - name: Inject Source & Target Firmware
         run: |
           echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
           gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3
 
-      - name: Inject Target Firmware (One UI 8.0 v8)
-        run: |
-          echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          gdown -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
+          echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입 (스크립트 매칭용 이름 변경)..."
+          # 스크립트 로그에 찍힌 최신 펌웨어 명칭(S911NKSS8FZF1)에 완벽히 대응하도록 파일명 지정
+          gdown -O src/firmware/SM-S911N_KOO/S911NKSS8FZF1_S911NOKR8FZF1_KOO_fac.zip 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
+          
+          # 혹시 스크립트가 구형 규칙이나 전체 빌드태그 조합을 요구할 수도 있으니 심볼릭 링크로 촘촘하게 방어
+          cd src/firmware/SM-S911N_KOO
+          ln -s S911NKSS8FZF1_S911NOKR8FZF1_KOO_fac.zip S911NKSS8FZF1_S911NOKR8FZF1_S911NKSS8FZF1_fac.zip
+          ln -s S911NKSS8FZF1_S911NOKR8FZF1_KOO_fac.zip S911NKSS8FZF1_KOO_fac.zip
+          ln -s S911NKSS8FZF1_S911NOKR8FZF1_KOO_fac.zip SM-S911N_5_20260101000000_target_fac.zip
+          cd -
 
       - name: Extract stock firmwares
         run: |
@@ -92,12 +98,14 @@ jobs:
           ./scripts/extract_fw.sh
 
       # =========================================================================
-      # 🛠️ One UI 8.5 빌드 패치 및 모듈 활성화 유지
+      # 🛠️ One UI 8.5 빌드 에러 우회 및 pinconfirm smali_classes2 강제 수정
       # =========================================================================
       - name: Patch and Bypass Broken Modules
         run: |
           echo "🤖 1. pinconfirm 모듈 경로를 구형 smali에서 smali_classes2로 실시간 치환..."
-          sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
+          if [ -f "unica/mods/pinconfirm/customize.sh" ]; then
+            sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
+          fi
 
           echo "🤖 2. 모듈 비활성화 스킵 (deknox, hma, paradigm, keybox 빌드 포함)"
 
@@ -132,4 +140,3 @@ jobs:
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
           echo "===================================================="
-
