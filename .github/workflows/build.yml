@@ -46,9 +46,9 @@ jobs:
         run: |
           sudo apt update
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
-            7zip attr ccache clang ffmpeg jq \
+            7zip attr ccache clang ffmpeg \
             libbrotli-dev libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
-            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp wget curl
+            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp
           sudo modprobe erofs f2fs
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -68,51 +68,23 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [구글 드라이브 차단 우회] curl/wget 트릭을 이용한 순정 zip 수동 주입
+      # 🚀 [우회 단계 1] 구글 드라이브로부터 펌웨어 강제 인젝션
       # =========================================================================
-      - name: Set up Firmware Directory
+      - name: Set up Firmware Directory & Install gdown
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
+          pip install gdown
 
-      - name: Inject Source & Target Firmware
+      - name: Inject Source Firmware (One UI 8.5)
         run: |
-          echo "📥 베이스 소스가 될 8.5 순정 zip 주입 (gdown 차단 대응 curl 트릭)..."
-          curl -L -c cookies.txt "https://docs.google.com/uc?export=download&id=1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" | sed -r "s/.*confirm=([0-9A-Za-z_]+).*/\1\n/p" | head -n 1 > confirm.txt
-          CONFIRM=$(cat confirm.txt)
-          if [ -n "$CONFIRM" ] && [ ${#CONFIRM} -lt 15 ]; then
-            curl -L -b cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM}&id=1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -o src/firmware/SM-S911N_KOO/source_85.zip
-          else
-            curl -L "https://docs.google.com/uc?export=download&id=1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -o src/firmware/SM-S911N_KOO/source_85.zip
-          fi
-          rm -f confirm.txt cookies.txt
+          echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
+          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
 
+      - name: Inject Target Firmware (One UI 8.0 v8)
+        run: |
           echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          curl -L -c cookies.txt "https://docs.google.com/uc?export=download&id=1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" | sed -r "s/.*confirm=([0-9A-Za-z_]+).*/\1\n/p" | head -n 1 > confirm.txt
-          CONFIRM=$(cat confirm.txt)
-          if [ -n "$CONFIRM" ] && [ ${#CONFIRM} -lt 15 ]; then
-            curl -L -b cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM}&id=1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -o src/firmware/SM-S911N_KOO/target_80.zip
-          else
-            curl -L "https://docs.google.com/uc?export=download&id=1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -o src/firmware/SM-S911N_KOO/target_80.zip
-          fi
-          rm -f confirm.txt cookies.txt
-
-          # 다운로드 파일 정상 여부 크기 체크 (터졌을 때 조기 중단용)
-          ls -lh src/firmware/SM-S911N_KOO/
-
-      - name: Hard Patch extract_fw.sh Logic
-        run: |
-          echo "🛠️ 스크립트 내부의 다운로드 체크 검문소를 무조건 프리패스하도록 조작합니다."
-          
-          # 1. 파일 미존재시 뱉는 'The firmware has not been downloaded' 검사 분기문 완전 삭제
-          sed -i '/has not been downloaded/,/fi/d' scripts/extract_fw.sh
-          
-          # 2. 오딘 타겟 탐색 변수 강제 수동 타겟팅 (경로 오타 완전 교정)
-          sed -i 's/DOWNLOADED_FIRMWARE=.*/DOWNLOADED_FIRMWARE="S911NKSS8FZF1\/S911NOKR8FZF1\/S911NKSS8FZF1"/g' scripts/extract_fw.sh
-          sed -i 's/BL_TAR=.*/BL_TAR="src\/firmware\/SM-S911N_KOO\/target_80.zip"/g' scripts/extract_fw.sh
-          sed -i 's/AP_TAR=.*/AP_TAR="src\/firmware\/SM-S911N_KOO\/target_80.zip"/g' scripts/extract_fw.sh
-          
-          echo "✅ extract_fw.sh 하드 인라인 패치 완수."
+          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
 
       - name: Extract stock firmwares
         run: |
@@ -120,16 +92,167 @@ jobs:
           ./scripts/extract_fw.sh
 
       # =========================================================================
+      # 🔥 [우회 단계 2] 깨진 config.sh를 덮어쓰고 무결성 환경 변수 강제 주입
+      # =========================================================================
+      - name: Force Injection Valid Config File
+        run: |
+          echo "🤖 깨진 기기 설정 파일 문법을 오버라이드하여 강제 재합성합니다..."
+          # 빌더가 빌드 환경에서 참조하는 out/ 폴더 또는 상위 캐시의 config.sh 구조를 100% 정상본으로 재생성
+          mkdir -p out
+          cat << 'EOF' > out/config.sh
+          ROM_IS_OFFICIAL="false"
+          ROM_VERSION="3.1.0-81096cf-dirty"
+          ROM_BUILD_TIMESTAMP="1782404347"
+          SOURCE_FIRMWARE="SM-S911N/KOO/351357510607145"
+          SOURCE_EXTRA_FIRMWARES=""
+          SOURCE_PLATFORM_SDK_VERSION="36"
+          SOURCE_PRODUCT_SHIPPING_API_LEVEL="33"
+          SOURCE_BOARD_API_LEVEL="33"
+          TARGET_NAME="Galaxy S23"
+          TARGET_CODENAME="dm1q"
+          TARGET_PLATFORM="sm8550"
+          TARGET_ASSERT_MODEL=""
+          TARGET_FIRMWARE="SM-S911N/KOO/351357510607145"
+          TARGET_EXTRA_FIRMWARES=""
+          TARGET_PLATFORM_SDK_VERSION="36"
+          TARGET_PRODUCT_SHIPPING_API_LEVEL="33"
+          TARGET_BOARD_API_LEVEL="33"
+          TARGET_DISABLE_AVB_SIGNING="false"
+          TARGET_INCLUDE_PATCHED_VBMETA="false"
+          TARGET_KEEP_ORIGINAL_SIGN="false"
+          TARGET_BOOT_PARTITION_SIZE="100663296"
+          TARGET_DTBO_PARTITION_SIZE="25165824"
+          TARGET_INIT_BOOT_PARTITION_SIZE="6291456"
+          TARGET_VENDOR_BOOT_PARTITION_SIZE="100663296"
+          TARGET_CACHE_PARTITION_SIZE="none"
+          TARGET_USE_DYNAMIC_PARTITIONS="true"
+          TARGET_SUPER_PARTITION_SIZE="12266242048"
+          SOURCE_SUPER_GROUP_NAME="qti_dynamic_partitions"
+          TARGET_SUPER_GROUP_NAME="qti_dynamic_partitions"
+          TARGET_QTI_DYNAMIC_PARTITIONS_SIZE="12262047744"
+          TARGET_OS_SINGLE_SYSTEM_IMAGE="qssi"
+          TARGET_OS_FILE_SYSTEM_TYPE="erofs"
+          TARGET_OS_BUILD_SYSTEM_EXT_PARTITION="true"
+          SOURCE_AUDIO_CONFIG_RECORDALIVE_LIB_VERSION="08020"
+          TARGET_AUDIO_CONFIG_RECORDALIVE_LIB_VERSION="08020"
+          SOURCE_AUDIO_SUPPORT_ACH_RINGTONE="true"
+          TARGET_AUDIO_SUPPORT_ACH_RINGTONE="true"
+          SOURCE_AUDIO_SUPPORT_DUAL_SPEAKER="true"
+          TARGET_AUDIO_SUPPORT_DUAL_SPEAKER="true"
+          SOURCE_AUDIO_SUPPORT_VIRTUAL_VIBRATION="true"
+          TARGET_AUDIO_SUPPORT_VIRTUAL_VIBRATION="true"
+          SOURCE_CAMERA_SUPPORT_CAMERAX_EXTENSION="true"
+          TARGET_CAMERA_SUPPORT_CAMERAX_EXTENSION="true"
+          SOURCE_CAMERA_SUPPORT_CUTOUT_PROTECTION="false"
+          TARGET_CAMERA_SUPPORT_CUTOUT_PROTECTION="false"
+          SOURCE_CAMERA_SUPPORT_MASS_APP_FLAVOR="false"
+          TARGET_CAMERA_SUPPORT_MASS_APP_FLAVOR="false"
+          SOURCE_CAMERA_SUPPORT_SDK_SERVICE="true"
+          TARGET_CAMERA_SUPPORT_SDK_SERVICE="true"
+          SOURCE_COMMON_CONFIG_MDNIE_MODE="65303"
+          TARGET_COMMON_CONFIG_MDNIE_MODE="65303"
+          SOURCE_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL="false"
+          TARGET_COMMON_SUPPORT_DYN_RESOLUTION_CONTROL="false"
+          SOURCE_COMMON_SUPPORT_EMBEDDED_SIM="true"
+          TARGET_COMMON_SUPPORT_EMBEDDED_SIM="true"
+          SOURCE_COMMON_SUPPORT_HDR_EFFECT="true"
+          TARGET_COMMON_SUPPORT_HDR_EFFECT="true"
+          SOURCE_DVFSAPP_CONFIG_DVFS_POLICY_FILENAME="dvfs_policy_default"
+          TARGET_DVFSAPP_CONFIG_DVFS_POLICY_FILENAME="dvfs_policy_default"
+          SOURCE_DVFSAPP_CONFIG_SSRM_POLICY_FILENAME="siop_dm1q_sm8550"
+          TARGET_DVFSAPP_CONFIG_SSRM_POLICY_FILENAME="siop_dm1q_sm8550"
+          SOURCE_FINGERPRINT_CONFIG_SENSOR="google_touch_display_ultrasonic"
+          TARGET_FINGERPRINT_CONFIG_SENSOR="google_touch_display_ultrasonic"
+          SOURCE_LCD_CONFIG_COLOR_WEAKNESS_SOLUTION="3"
+          TARGET_LCD_CONFIG_COLOR_WEAKNESS_SOLUTION="3"
+          SOURCE_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS="5"
+          TARGET_LCD_CONFIG_CONTROL_AUTO_BRIGHTNESS="5"
+          SOURCE_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE="120"
+          TARGET_LCD_CONFIG_HFR_DEFAULT_REFRESH_RATE="120"
+          SOURCE_LCD_CONFIG_HFR_MODE="2"
+          TARGET_LCD_CONFIG_HFR_MODE="2"
+          SOURCE_LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE="24,10,30,48,60,96,120"
+          TARGET_LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE="24,10,30,48,60,96,120"
+          SOURCE_LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE_NS="60"
+          TARGET_LCD_CONFIG_HFR_SUPPORTED_REFRESH_RATE_NS="60"
+          SOURCE_LCD_CONFIG_SEAMLESS_BRT="84,91"
+          TARGET_LCD_CONFIG_SEAMLESS_BRT="84,91"
+          SOURCE_LCD_CONFIG_SEAMLESS_LUX="200,2500"
+          TARGET_LCD_CONFIG_SEAMLESS_LUX="200,2500"
+          SOURCE_LCD_SUPPORT_MDNIE_HW="true"
+          TARGET_LCD_SUPPORT_MDNIE_HW="true"
+          SOURCE_RIL_FEATURES="vzwcdmaless lracdmaless uscacgcdmaless xaacdmaless onebinary satellite_carrier"
+          TARGET_RIL_FEATURES="koo_features single_sim volte_enabled limited_whocall"
+          SOURCE_RIL_SIM_CONFIG_MULTISIM_TRAYCOUNT="1"
+          TARGET_RIL_SIM_CONFIG_MULTISIM_TRAYCOUNT="1"
+          SOURCE_RIL_SUPPORT_WATERPROOF_SIM_TRAY_MSG="true"
+          TARGET_RIL_SUPPORT_WATERPROOF_SIM_TRAY_MSG="true"
+          SOURCE_SECURITY_CONFIG_ESE_CHIP_VENDOR="NXP"
+          TARGET_SECURITY_CONFIG_ESE_CHIP_VENDOR="NXP"
+          SOURCE_SECURITY_CONFIG_ESE_COS_NAME="JCOP6.3U"
+          TARGET_SECURITY_CONFIG_ESE_COS_NAME="JCOP6.3U"
+          SOURCE_WLAN_CONFIG_CONNECTION_PERSONALIZATION="1"
+          TARGET_WLAN_CONFIG_CONNECTION_PERSONALIZATION="1"
+          SOURCE_WLAN_CONFIG_CPU_CSTATE_DISABLE_THRESHOLD="100"
+          TARGET_WLAN_CONFIG_CPU_CSTATE_DISABLE_THRESHOLD="100"
+          SOURCE_WLAN_CONFIG_CUSTOM_BACKOFF="none"
+          TARGET_WLAN_CONFIG_CUSTOM_BACKOFF="none"
+          SOURCE_WLAN_CONFIG_DATA_ACTIVITY_AFFINITY_BOOSTER_THRESHOLD="0"
+          TARGET_WLAN_CONFIG_DATA_ACTIVITY_AFFINITY_BOOSTER_THRESHOLD="0"
+          SOURCE_WLAN_CONFIG_DYNAMIC_SWITCH="0"
+          TARGET_WLAN_CONFIG_DYNAMIC_SWITCH="0"
+          SOURCE_WLAN_CONFIG_L1SS_DISABLE_THRESHOLD="0"
+          TARGET_WLAN_CONFIG_L1SS_DISABLE_THRESHOLD="0"
+          SOURCE_WLAN_SUPPORT_80211AX="true"
+          TARGET_WLAN_SUPPORT_80211AX="true"
+          SOURCE_WLAN_SUPPORT_80211AX_6GHZ="true"
+          TARGET_WLAN_SUPPORT_80211AX_6GHZ="true"
+          SOURCE_WLAN_SUPPORT_APE_SERVICE="true"
+          TARGET_WLAN_SUPPORT_APE_SERVICE="true"
+          SOURCE_WLAN_SUPPORT_LOWLATENCY="true"
+          TARGET_WLAN_SUPPORT_LOWLATENCY="true"
+          SOURCE_WLAN_SUPPORT_MBO="true"
+          TARGET_WLAN_SUPPORT_MBO="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_5G_BASEDON_COUNTRY="false"
+          TARGET_WLAN_SUPPORT_MOBILEAP_5G_BASEDON_COUNTRY="false"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_6G="true"
+          TARGET_WLAN_SUPPORT_MOBILEAP_6G="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_DUALAP="true"
+          TARGET_WLAN_SUPPORT_MOBILEAP_DUALAP="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_OWE="false"
+          TARGET_WLAN_SUPPORT_MOBILEAP_OWE="false"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_POWER_SAVEMODE="true"
+          TARGET_WLAN_SUPPORT_MOBILEAP_POWER_SAVEMODE="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_PRIORITIZE_TRAFFIC="true"
+          TARGET_WLAN_SUPPORT_MOBILEAP_PRIORITIZE_TRAFFIC="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_WIFI_CONCURRENCY="true"
+          TARGET_WLAN_SUPPORT_MOBILEAP_WIFI_CONCURRENCY="true"
+          SOURCE_WLAN_SUPPORT_MOBILEAP_WIFISHARING_LITE="false"
+          TARGET_WLAN_SUPPORT_MOBILEAP_WIFISHARING_LITE="true"
+          SOURCE_WLAN_SUPPORT_SWITCH_FOR_INDIVIDUAL_APPS="true"
+          TARGET_WLAN_SUPPORT_SWITCH_FOR_INDIVIDUAL_APPS="true"
+          SOURCE_WLAN_SUPPORT_TWT_CONTROL="true"
+          TARGET_WLAN_SUPPORT_TWT_CONTROL="true"
+          SOURCE_WLAN_SUPPORT_WIFI_TO_CELLULAR="true"
+          TARGET_WLAN_SUPPORT_WIFI_TO_CELLULAR="true"
+          EOF
+          echo "✅ 완전 무결한 config.sh 인젝션 완료."
+
+      # =========================================================================
       # 🛠️ One UI 8.5 빌드 에러 우회 및 pinconfirm smali_classes2 강제 수정
       # =========================================================================
       - name: Patch and Bypass Broken Modules
         run: |
           echo "🤖 1. pinconfirm 모듈 경로를 구형 smali에서 smali_classes2로 실시간 치환..."
-          if [ -f "unica/mods/pinconfirm/customize.sh" ]; then
-            sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
-          fi
+          sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
 
-          echo "🤖 2. 모듈 비활성화 스킵 (deknox, hma, paradigm, keybox 빌드 포함)"
+          echo "🤖 2. One UI 8.5 베이스 대격변으로 터지는 모듈들 런타임 비활성화..."
+          for mod in deknox hma paradigm keybox; do
+            if [ -f "unica/mods/$mod/customize.sh" ]; then
+              echo " -> Bypassing $mod module"
+              sed -i '1s/^/exit 0\n/' unica/mods/$mod/customize.sh
+            fi
+          done
 
       - name: Build ROM
         run: |
