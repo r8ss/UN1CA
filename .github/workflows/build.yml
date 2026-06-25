@@ -68,23 +68,23 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [우회 단계 1] 구글 드라이브로부터 펌웨어 강제 인젝션
+      # 🚀 [문법 완전 교정] gdown 최신 인자 매치 (gdown 파일ID -O 경로)
       # =========================================================================
       - name: Set up Firmware Directory & Install gdown
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
-          pip install gdown
+          pip install --upgrade gdown
 
       - name: Inject Source Firmware (One UI 8.5)
         run: |
           echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
-          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
+          gdown 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
 
       - name: Inject Target Firmware (One UI 8.0 v8)
         run: |
           echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
+          gdown 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
 
       - name: Extract stock firmwares
         run: |
@@ -92,12 +92,11 @@ jobs:
           ./scripts/extract_fw.sh
 
       # =========================================================================
-      # 🔥 [우회 단계 2] 깨진 config.sh를 덮어쓰고 무결성 환경 변수 강제 주입
+      # 🔥 [무결성 유지] 환경 변수 직주입 강제 보정 로직
       # =========================================================================
       - name: Force Injection Valid Config File
         run: |
           echo "🤖 깨진 기기 설정 파일 문법을 오버라이드하여 강제 재합성합니다..."
-          # 빌더가 빌드 환경에서 참조하는 out/ 폴더 또는 상위 캐시의 config.sh 구조를 100% 정상본으로 재생성
           mkdir -p out
           cat << 'EOF' > out/config.sh
           ROM_IS_OFFICIAL="false"
