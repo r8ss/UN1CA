@@ -15,15 +15,6 @@ COMPARE_SEC_BUILD_VERSION()
     STRING1="$(cut -d "/" -f 1 -s <<< "$STRING1")"
     STRING2="$(cut -d "/" -f 1 -s <<< "$STRING2")"
 
-    # Samsung Android OS build version scheme works as follows (eg. A528BXXU1DWA4):
-    # - A528B: Model number
-    # - XX: Region (XX = EUR_OPEN)
-    # - U: Firmware type (U = full update, S = security update)
-    # - 1: Rollback protection bit
-    # - D: Major OS version (D = 4th OS rollout)
-    # - W: Year (W = 2023)
-    # - A: Month (A = january)
-    # - 4: Incremental version
     local STRING1_MAJOR="${STRING1:${#STRING1}-4:1}"
     local STRING1_YEAR="${STRING1:${#STRING1}-3:1}"
     local STRING1_MONTH="${STRING1:${#STRING1}-2:1}"
@@ -102,14 +93,19 @@ GET_LATEST_FIRMWARE()
     _CHECK_NON_EMPTY_PARAM "MODEL" "$1" || return 1
     _CHECK_NON_EMPTY_PARAM "CSC" "$2" || return 1
 
+    # 만약 config.sh에 사용자가 지정한 강제 버전(FORCE_FIRMWARE_VERSION)이 존재하면
+    # 삼성 FOTA 서버 요청을 완전히 우회하고 해당 버전을 바로 반환합니다.
+    if [ ! -z "$FORCE_FIRMWARE_VERSION" ]; then
+        echo "$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION"
+        return 0
+    fi
+
     curl -s --retry 3 -m 3 "https://fota-cloud-dn.ospserver.net/firmware/$2/$1/version.xml" \
         | perl -nE 'say $1 if /<latest[^>]*>(.*?)<\/latest>/'
 }
 
 # PARSE_FIRMWARE_STRING <string>
 # Parses the supplied string and stores each value in MODEL/CSC/IMEI/SERIAL_NO variables.
-# - The supplied string must be in the following format: <MODEL>/<CSC>/<IMEI/SN>
-# - IMEI/SN that matches the given model is required to download the firmware from FUS
 PARSE_FIRMWARE_STRING()
 {
     local STRING="$1"
@@ -142,7 +138,6 @@ PARSE_FIRMWARE_STRING()
     elif [[ "${#THIRD}" == "11" ]] && [[ "$THIRD" == "R"* ]]; then
         SERIAL_NO="$THIRD"
     elif [[ "${#THIRD}" -ge "8" ]] && [[ "${#THIRD}" -le "15" ]] && [[ "$THIRD" =~ ^[+-]?[0-9]+$ ]]; then
-        # Allow uncomplete IMEIs as samloader can generate them by providing the first 8 numbers (TAC)
         IMEI="$THIRD"
     else
         LOGE "No valid IMEI/SN in \"$STRING\": $THIRD"
