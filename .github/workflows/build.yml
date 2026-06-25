@@ -1,4 +1,4 @@
-name: Build
+Name: Build
 
 on:
   workflow_dispatch:
@@ -18,7 +18,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [dm1q,dm3q]
+        # [수정] S23 Ultra (dm3q) 제거, S23 노멀 (dm1q)만 단독 빌드 세팅
+        target: [dm1q]
 
     steps:
       - name: Checkout repo
@@ -67,10 +68,27 @@ jobs:
           source ./buildenv.sh ${{ matrix.target }}
           ./scripts/build_dependencies.sh
 
-      - name: Download stock firmwares
+      # =========================================================================
+      # 🚀 [수정] 다운로드 스크립트 우회 및 구글 드라이브 고유 링크 펌웨어 강제 주입
+      # =========================================================================
+      - name: Set up Firmware Directories & Install gdown
         run: |
-          source ./buildenv.sh ${{ matrix.target }}
-          ./scripts/download_fw.sh
+          # 빌더가 혼선 없이 압축을 해제하도록 소스(8.5)와 타겟(8.0) 전용 디렉토리 생성
+          mkdir -p src/firmware/SOURCE_S911N_KOO
+          mkdir -p src/firmware/TARGET_S911N_KOO
+          pip install gdown
+
+      - name: Inject Source Firmware (One UI 8.5 최신 베이스)
+        run: |
+          echo "📥 구글 드라이브로부터 포팅 베이스가 될 8.5 순정 펌웨어 다운로드 중..."
+          gdown --id 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SOURCE_S911N_KOO/SM-S911N_5_8.5_stock_fac.zip
+
+      - name: Inject Target Firmware (One UI 8.0 v8 내 폰 빌드용)
+        run: |
+          echo "📥 구글 드라이브로부터 디바이스 타겟이 될 8.0 v8 순정 펌웨어 다운로드 중..."
+          gdown --id 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/TARGET_S911N_KOO/SM-S911N_5_8.0_v8_fac.zip
+
+      # 원래 존재하던 삼성 FOTA 서버 다운로드 세션 단계는 완벽하게 무력화 및 삭제 (Bypass 완료)
 
       - name: Extract stock firmwares
         run: |
@@ -86,7 +104,6 @@ jobs:
           sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
 
           echo "🤖 2. One UI 8.5 베이스 대격변으로 터지는 모듈들 런타임 비활성화..."
-          # 각 모듈 스크립트 최상단에 exit 0을 박아서 패치 로직을 에러 없이 패스시킵니다.
           for mod in deknox hma paradigm keybox; do
             if [ -f "unica/mods/$mod/customize.sh" ]; then
               echo " -> Bypassing $mod module"
@@ -101,15 +118,12 @@ jobs:
 
       - name: Upload to Gofile
         run: |
-          # 1. target_files를 제외하고 UN1CA 플래싱 zip 또는 signed 배포 파일만 먼저 검색
           ROM_FILE=$(find out/ -type f \( -name "UN1CA_*.zip" -o -name "*-sign.zip" -o -name "*-ota-*.zip" \) -size +100M | grep -v "target_files" | head -n 1)
           
-          # 2. 만약 위 조건으로 못 찾으면 일반 zip/tar 중 target_files가 아닌 것을 검색
           if [ -z "$ROM_FILE" ]; then
             ROM_FILE=$(find out/ -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | grep -v "target_files" | head -n 1)
           fi
           
-          # 3. 최후의 보루 (정 없다면 아무거나 잡음)
           if [ -z "$ROM_FILE" ]; then
             ROM_FILE=$(find . -type f \( -name "*.zip" -o -name "*.tar" \) -size +100M | head -n 1)
           fi
