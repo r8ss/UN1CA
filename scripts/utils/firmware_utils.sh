@@ -5,6 +5,9 @@
 source "$SRC_DIR/scripts/utils/build_utils.sh" || return 1
 # ]
 
+# 동일 기기 빌드 시 소스/타겟 호출 순서를 분리하기 위한 글로벌 카운터 변수 선언
+CALL_COUNT=0
+
 # COMPARE_SEC_BUILD_VERSION <string1> <string2>
 # Returns whether or not `string1` build number is older than `string2`.
 COMPARE_SEC_BUILD_VERSION()
@@ -93,18 +96,20 @@ GET_LATEST_FIRMWARE()
     _CHECK_NON_EMPTY_PARAM "MODEL" "$1" || return 1
     _CHECK_NON_EMPTY_PARAM "CSC" "$2" || return 1
 
-    # [S23 동일 기기 타겟 우회 핵심 로직]
-    # 메인 다운로드 스크립트(download_fw.sh)의 루프 상태를 추적합니다.
-    # 만약 현재 호출된 컨텍스트가 TARGET_FIRMWARE를 처리 중이거나, 
-    # 혹은 현재 쉘에 바인딩된 $STRING 변수가 TARGET_FIRMWARE와 같다면 타겟 버전을 강제 반환합니다.
-    if [ ! -z "$FORCE_TARGET_FIRMWARE_VERSION" ]; then
-        if [[ "$TYPE" == "TARGET" ]] || [[ "$STRING" == "$TARGET_FIRMWARE" ]]; then
-            echo "$FORCE_TARGET_FIRMWARE_VERSION/$FORCE_TARGET_FIRMWARE_VERSION/$FORCE_TARGET_FIRMWARE_VERSION"
+    # 함수가 호출될 때마다 카운터를 1씩 증가시킴
+    CALL_COUNT=$((CALL_COUNT + 1))
+
+    # [동일 기기 타겟 우회 정밀 로직]
+    # UN1CA는 무조건 SOURCE_FIRMWARE(베이스)를 1번째로 조회하고, TARGET_FIRMWARE(내폰용)를 2번째로 조회함.
+    # 따라서 2번째 호출(CALL_COUNT >= 2)일 때 config.sh의 FORCE_FIRMWARE_VERSION 변수 값을 강제 주입함.
+    if [ ! -z "$FORCE_FIRMWARE_VERSION" ]; then
+        if [ "$CALL_COUNT" -ge 2 ]; then
+            echo "$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION"
             return 0
         fi
     fi
 
-    # 소스(베이스) 기기용 조회이거나 일반 조회일 때는 정상적으로 최신 버전을 긁어옴
+    # 1번째 호출(소스 펌웨어용)일 때는 가로채지 않고 정상적으로 삼성 FOTA 서버에서 최신 버전을 긁어옴
     curl -s --retry 3 -m 3 "https://fota-cloud-dn.ospserver.net/firmware/$2/$1/version.xml" \
         | perl -nE 'say $1 if /<latest[^>]*>(.*?)<\/latest>/'
 }
