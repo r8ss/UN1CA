@@ -93,13 +93,18 @@ GET_LATEST_FIRMWARE()
     _CHECK_NON_EMPTY_PARAM "MODEL" "$1" || return 1
     _CHECK_NON_EMPTY_PARAM "CSC" "$2" || return 1
 
-    # 만약 config.sh에 사용자가 지정한 강제 버전(FORCE_FIRMWARE_VERSION)이 존재하면
-    # 삼성 FOTA 서버 요청을 완전히 우회하고 해당 버전을 바로 반환합니다.
-    if [ ! -z "$FORCE_FIRMWARE_VERSION" ]; then
-        echo "$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION/$FORCE_FIRMWARE_VERSION"
-        return 0
+    # [S23 동일 기기 타겟 우회 핵심 로직]
+    # 메인 다운로드 스크립트(download_fw.sh)의 루프 상태를 추적합니다.
+    # 만약 현재 호출된 컨텍스트가 TARGET_FIRMWARE를 처리 중이거나, 
+    # 혹은 현재 쉘에 바인딩된 $STRING 변수가 TARGET_FIRMWARE와 같다면 타겟 버전을 강제 반환합니다.
+    if [ ! -z "$FORCE_TARGET_FIRMWARE_VERSION" ]; then
+        if [[ "$TYPE" == "TARGET" ]] || [[ "$STRING" == "$TARGET_FIRMWARE" ]]; then
+            echo "$FORCE_TARGET_FIRMWARE_VERSION/$FORCE_TARGET_FIRMWARE_VERSION/$FORCE_TARGET_FIRMWARE_VERSION"
+            return 0
+        fi
     fi
 
+    # 소스(베이스) 기기용 조회이거나 일반 조회일 때는 정상적으로 최신 버전을 긁어옴
     curl -s --retry 3 -m 3 "https://fota-cloud-dn.ospserver.net/firmware/$2/$1/version.xml" \
         | perl -nE 'say $1 if /<latest[^>]*>(.*?)<\/latest>/'
 }
