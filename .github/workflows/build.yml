@@ -68,24 +68,39 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [구글 차단 우회] gdrive 전용 게이트웨이 액션으로 안정적 펌웨어 다운로드
+      # 🚀 [구글 보안 우회] curl + 쿠키 확인 토큰 추출을 통한 대용량 zip 다운로드
       # =========================================================================
-      - name: Prepare Firmware Directory
+      - name: Download Stock Firmwares via Native Curl Gateway
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-      - name: Inject Source Firmware (One UI 8.5)
-        uses: magiclen/gdrive-download@v1
-        with:
-          id: 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3
-          filename: src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
+          echo "📥 1. 베이스 소스가 될 8.5 순정 zip 다운로드 중..."
+          FILE_ID_1="1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3"
+          OUT_1="src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          
+          CONFIRM_1=$(curl -sL --cookie-jar cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID_1}" | grep -o 'confirm=[^&"]*' | sed 's/confirm=//')
+          if [ -n "$CONFIRM_1" ]; then
+            curl -L --cookie cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM_1}&id=${FILE_ID_1}" -o "$OUT_1"
+          else
+            curl -L "https://docs.google.com/uc?export=download&id=${FILE_ID_1}" -o "$OUT_1"
+          fi
+          rm -f cookies.txt
 
-      - name: Inject Target Firmware (One UI 8.0 v8)
-        uses: magiclen/gdrive-download@v1
-        with:
-          id: 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
-          filename: src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
+          echo "📥 2. 내 폰 타겟이 될 8.0 v8 순정 zip 다운로드 중..."
+          FILE_ID_2="1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo"
+          OUT_2="src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip"
+
+          CONFIRM_2=$(curl -sL --cookie-jar cookies.txt "https://docs.google.com/uc?export=download&id=${FILE_ID_2}" | grep -o 'confirm=[^&"]*' | sed 's/confirm=//')
+          if [ -n "$CONFIRM_2" ]; then
+            curl -L --cookie cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM_2}&id=${FILE_ID_2}" -o "$OUT_2"
+          else
+            curl -L "https://docs.google.com/uc?export=download&id=${FILE_ID_2}" -o "$OUT_2"
+          fi
+          rm -f cookies.txt
+          
+          echo "✅ 모든 순정 펌웨어 다운로드 완료!"
+          ls -lh src/firmware/SM-S911N_KOO/
 
       - name: Extract stock firmwares
         run: |
@@ -285,4 +300,3 @@ jobs:
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
           echo "===================================================="
-
