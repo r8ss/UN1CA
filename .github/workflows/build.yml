@@ -68,23 +68,24 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [문법 완전 교정] gdown 최신 인자 매치 (gdown 파일ID -O 경로)
+      # 🚀 [구글 차단 우회] gdrive 전용 게이트웨이 액션으로 안정적 펌웨어 다운로드
       # =========================================================================
-      - name: Set up Firmware Directory & Install gdown
+      - name: Prepare Firmware Directory
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
-          pip install --upgrade gdown
 
       - name: Inject Source Firmware (One UI 8.5)
-        run: |
-          echo "📥 베이스 소스가 될 8.5 순정 zip 주입..."
-          gdown 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3 -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
+        uses: magiclen/gdrive-download@v1
+        with:
+          id: 1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3
+          filename: src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip
 
       - name: Inject Target Firmware (One UI 8.0 v8)
-        run: |
-          echo "📥 내 폰 타겟이 될 8.0 v8 순정 zip 주입..."
-          gdown 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo -O src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
+        uses: magiclen/gdrive-download@v1
+        with:
+          id: 1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo
+          filename: src/firmware/SM-S911N_KOO/SM-S911N_5_20260101000000_target_fac.zip
 
       - name: Extract stock firmwares
         run: |
