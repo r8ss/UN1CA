@@ -48,9 +48,8 @@ jobs:
           DEBIAN_FRONTEND=noninteractive sudo apt install -yq \
             7zip attr ccache clang ffmpeg \
             libbrotli-dev libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
-            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp python3-pip
+            libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp
           sudo modprobe erofs f2fs
-          pip3 install --break-system-packages gdown
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
           echo -n "${{ secrets.PLATFORM_KEY_PK8 }}" | base64 --decode > security/unica_platform.pk8
@@ -69,20 +68,34 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [구글 대용량 우회] 인자 제거 및 표준 공유 링크 포맷으로 직공 다운로드
+      # 🚀 [구글 바이패스 공정] 대용량 보안 경고 및 할당량 트래픽 강제 우회 다운로드
       # =========================================================================
-      - name: Secure Download Stock Firmwares via Python Gdown
+      - name: Advanced Google Drive Bypass Download
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드..."
-          gdown "https://drive.google.com/uc?id=1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 (API 토큰 획득 및 바이패스)..."
+          ID_1="1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3"
+          CONFIRM_1=$(curl -sL --cookie-jar cookies.txt "https://docs.google.com/uc?export=download&id=${ID_1}" | grep -o 'confirm=[^&"]*' | sed 's/confirm=//')
+          if [ -n "$CONFIRM_1" ]; then
+            curl -L --cookie cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM_1}&id=${ID_1}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          else
+            curl -L "https://docs.google.com/uc?export=download&id=${ID_1}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          fi
+          rm -f cookies.txt
 
-          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드..."
-          gdown "https://drive.google.com/uc?id=1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 (API 토큰 획득 및 바이패스)..."
+          ID_2="1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo"
+          CONFIRM_2=$(curl -sL --cookie-jar cookies.txt "https://docs.google.com/uc?export=download&id=${ID_2}" | grep -o 'confirm=[^&"]*' | sed 's/confirm=//')
+          if [ -n "$CONFIRM_2" ]; then
+            curl -L --cookie cookies.txt "https://docs.google.com/uc?export=download&confirm=${CONFIRM_2}&id=${ID_2}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          else
+            curl -L "https://docs.google.com/uc?export=download&id=${ID_2}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          fi
+          rm -f cookies.txt
 
-          echo "✅ 다운로드 완료! 파일 크기 검증:"
+          echo "✅ 다운로드 완료! 실제 파일 매핑 결과 확인:"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
@@ -154,4 +167,3 @@ jobs:
           echo " 🎉 빌드가 성공적으로 Gofile에 업로드 되었습니다!"
           echo " 다운로드 링크: $DOWNLOAD_LINK"
           echo "===================================================="
-
