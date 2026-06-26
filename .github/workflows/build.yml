@@ -88,21 +88,33 @@ jobs:
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
-      # 🛠️ 수동 압축 해제 및 오딘 캐시 인젝션
+      # 🛠️ 수동 압축 해제 및 오딘 캐시 인젝션 (스킵 오버라이드 락 해제)
       # =========================================================================
       - name: Force Unpack To Match Builder Environment
         run: |
           echo "🤖 빌더 내장 복사 세션 수동 개방..."
+          rm -rf out/odin/SM-S911N_KOO
           mkdir -p out/odin/SM-S911N_KOO
           
           unzip -o src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip -d out/odin/SM-S911N_KOO/
           unzip -o src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip -d out/odin/SM-S911N_KOO/
           
-          # 빌더 플래그 수동 적재
-          echo "S911NKSS8FZF1/S911NOKR8FZF1/S911NKSS8FZF1" > out/odin/SM-S911N_KOO/.downloaded
+          rm -f out/odin/SM-S911N_KOO/.downloaded
+          rm -f out/odin/SM-S911N_KOO/.extracted
           
           echo "🤖 해제 완료된 리얼 바이너리 타르볼 리스트:"
           ls -lh out/odin/SM-S911N_KOO/
+
+      # =========================================================================
+      # 🛠️ 빌더 스크립트 우회 - 이미 추출되었다는 예외 로직 강제 삭제
+      # =========================================================================
+      - name: Patch Builder Script To Force Extraction
+        run: |
+          echo "🤖 빌더 스크립트에서 추출 스킵 조건문 비활성화 중..."
+          if [ -f "scripts/extract_fw.sh" ]; then
+            sed -i 's/exit 0/# exit 0/g' scripts/extract_fw.sh
+            sed -i 's/return 0/# return 0/g' scripts/extract_fw.sh
+          fi
 
       - name: Extract stock firmwares (Pure Build Stream)
         run: |
@@ -110,21 +122,8 @@ jobs:
           ./scripts/extract_fw.sh
 
       # =========================================================================
-      # 🛠️ One UI 8.5 빌드 에러 우회 및 pinconfirm smali_classes2 강제 수정
+      # 🛠️ 순정 ROM 컴파일 파이프라인
       # =========================================================================
-      - name: Patch and Bypass Broken Modules
-        run: |
-          echo "🤖 1. pinconfirm 모듈 경로를 구형 smali에서 smali_classes2로 실시간 치환..."
-          sed -i 's|"smali/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|"smali_classes2/com/android/settings/password/ChooseLockPassword\\$ChooseLockPasswordFragment.smali"|g' unica/mods/pinconfirm/customize.sh
-
-          echo "🤖 2. One UI 8.5 베이스 대격변으로 터지는 모듈들 런타임 비활성화..."
-          for mod in deknox hma paradigm keybox; do
-            if [ -f "unica/mods/$mod/customize.sh" ]; then
-              echo " -> Bypassing $mod module"
-              sed -i '1s/^/exit 0\n/' unica/mods/$mod/customize.sh
-            fi
-          done
-
       - name: Build ROM
         run: |
           source ./buildenv.sh ${{ matrix.target }}
