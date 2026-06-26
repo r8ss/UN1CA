@@ -68,44 +68,30 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [Gofile 세션 뚫기] 브라우저 인증 우회 후 리얼 바이너리 고속 스트리밍
+      # 🚀 [허깅페이스 직공 스트림] 보안 제한 및 토큰 블로킹 없는 완벽한 우회 다운로드
       # =========================================================================
-      - name: Hardened Gofile Session Download
+      - name: Clean Hugging Face Direct Download
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-          FOLDER_ID="b9a21a8e-85fb-4d38-81f3-1f55d333cfa1"
-          echo "🤖 Gofile 보안 게이트웨이 인증 세션 수동 개방..."
-          
-          # 1단계: Gofile 메인 페이지를 찔러 게스트 쿠키 세션 생성 및 wt 토큰 확보 시도
-          curl -s -c cookies.txt "https://gofile.io/d/${FOLDER_ID}" > /dev/null
-          
-          # 2단계: 최신 스토리지 서버 할당 정보 런타임 조회
-          STORE_SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
-          if [ -z "$STORE_SERVER" ] || [ "$STORE_SERVER" = "null" ]; then
-            STORE_SERVER="store1"
+          # ⚠️ 본인이 허깅페이스에 올린 파일의 'resolve/main' 직공 다운로드 링크를 넣어주세요.
+          # 만약 레포를 Private으로 만들었다면 주소 뒤에 ?download=true 쿼리나 토큰이 붙을 수 있습니다. (Public 권장)
+          HF_URL_85="여기다가_허깅페이스_8.5_직공_링크_입력"
+          HF_URL_80="여기다가_허깅페이스_8.0_직공_링크_입력"
+
+          if [ "$HF_URL_85" = "여기다가_허깅페이스_8.5_직공_링크_입력" ]; then
+            echo "❌ 에러: 허깅페이스 다운로드 주소를 입력해야 빌드가 진행됩니다."
+            exit 1
           fi
-          echo "📡 최종 라우팅 고속 서버: ${STORE_SERVER}"
 
-          # 3단계: 브라우저 User-Agent 및 Referer 헤더를 강제로 주입하여 불법 핫링크 차단 우회 다운로드
-          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 중 (8FZF1)..."
-          curl -L -b cookies.txt \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -H "Referer: https://gofile.io/" \
-            "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS8FZF1_fac.zip" \
-            -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 중 (Hugging Face)..."
+          curl -L "${HF_URL_85}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
 
-          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 중 (6EZA1)..."
-          curl -L -b cookies.txt \
-            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-            -H "Referer: https://gofile.io/" \
-            "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip" \
-            -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 중 (Hugging Face)..."
+          curl -L "${HF_URL_80}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
 
-          rm -f cookies.txt
-
-          echo "✅ 다운로드 완료! 실제 파일 매핑 크기(0바이트인지 기가바이트 단위인지 확인):"
+          echo "✅ 다운로드 완료! 리얼 바이너리 스토리지 스캔 결과:"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
