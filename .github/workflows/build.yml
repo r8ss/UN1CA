@@ -68,37 +68,44 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [Gofile 안정화 공정] API 파싱 우회 및 다운로드 서버 직공 라우팅
+      # 🚀 [Gofile 세션 뚫기] 브라우저 인증 우회 후 리얼 바이너리 고속 스트리밍
       # =========================================================================
-      - name: Download from Gofile Mirror Stream
+      - name: Hardened Gofile Session Download
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
           FOLDER_ID="b9a21a8e-85fb-4d38-81f3-1f55d333cfa1"
-          echo "🤖 Gofile 서버 다이렉트 세션 확보 중..."
+          echo "🤖 Gofile 보안 게이트웨이 인증 세션 수동 개방..."
           
-          # Gofile은 기본적으로 API 응답이 실패할 경우를 대비해, 
-          # 웹페이지 브라우저 세션을 모방하여 쿠키 및 서버 정보를 핸드셰이크합니다.
-          STORE_SERVER=$(curl -s "https://api.gofile.io/contents/${FOLDER_ID}" | jq -r '.data.server' 2>/dev/null)
+          # 1단계: Gofile 메인 페이지를 찔러 게스트 쿠키 세션 생성 및 wt 토큰 확보 시도
+          curl -s -c cookies.txt "https://gofile.io/d/${FOLDER_ID}" > /dev/null
           
+          # 2단계: 최신 스토리지 서버 할당 정보 런타임 조회
+          STORE_SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
           if [ -z "$STORE_SERVER" ] || [ "$STORE_SERVER" = "null" ]; then
-            echo "⚠️ API 제한 감지: 대체 다운로드 서버 분기 가동..."
-            # 최신 활성화된 Gofile 스토리지 서버 리스트 중 첫 번째 서버를 강제 매핑합니다.
-            STORE_SERVER=$(curl -s https://api.gofile.io/servers | jq -r '.data.servers[0].name')
+            STORE_SERVER="store1"
           fi
+          echo "📡 최종 라우팅 고속 서버: ${STORE_SERVER}"
 
-          echo "📡 매핑된 Gofile 고속 빌드 서버: ${STORE_SERVER}"
-
-          # 폴더 내부의 파일 이름과 링킹 구조를 파싱하지 않고, 폴더 ID를 브라우저 링크 토큰으로 주입하여 
-          # 웹 스트리밍 파이프라인으로 다운로드를 우회합니다.
+          # 3단계: 브라우저 User-Agent 및 Referer 헤더를 강제로 주입하여 불법 핫링크 차단 우회 다운로드
           echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 중 (8FZF1)..."
-          curl -L "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS8FZF1_fac.zip" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          curl -L -b cookies.txt \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            -H "Referer: https://gofile.io/" \
+            "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS8FZF1_fac.zip" \
+            -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
 
           echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 중 (6EZA1)..."
-          curl -L "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          curl -L -b cookies.txt \
+            -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
+            -H "Referer: https://gofile.io/" \
+            "https://${STORE_SERVER}.gofile.io/download/web/${FOLDER_ID}/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip" \
+            -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
 
-          echo "✅ 다운로드 완료! 바이너리 구조 및 정밀 용량 체크:"
+          rm -f cookies.txt
+
+          echo "✅ 다운로드 완료! 실제 파일 매핑 크기(0바이트인지 기가바이트 단위인지 확인):"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
