@@ -68,30 +68,23 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [허깅페이스 직공 스트림] 보안 제한 및 토큰 블로킹 없는 완벽한 우회 다운로드
+      # 🚀 [허깅페이스 직공 스트림] 트래픽 차단 및 유료 제한 없는 다운로드 파이프라인
       # =========================================================================
-      - name: Clean Hugging Face Direct Download
+      - name: Hugging Face Pure Direct Download
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-          # ⚠️ 본인이 허깅페이스에 올린 파일의 'resolve/main' 직공 다운로드 링크를 넣어주세요.
-          # 만약 레포를 Private으로 만들었다면 주소 뒤에 ?download=true 쿼리나 토큰이 붙을 수 있습니다. (Public 권장)
-          HF_URL_85="여기다가_허깅페이스_8.5_직공_링크_입력"
-          HF_URL_80="여기다가_허깅페이스_8.0_직공_링크_입력"
-
-          if [ "$HF_URL_85" = "여기다가_허깅페이스_8.5_직공_링크_입력" ]; then
-            echo "❌ 에러: 허깅페이스 다운로드 주소를 입력해야 빌드가 진행됩니다."
-            exit 1
-          fi
+          HF_DIRECT_85="https://huggingface.co/datasets/ssch11/S911N85un1ca1/resolve/main/SAMFW.COM_SM-S911N_KOO_S911NKSS8FZF1_fac.zip"
+          HF_DIRECT_80="https://huggingface.co/datasets/ssch11/S911N85un1ca1/resolve/main/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
           echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 중 (Hugging Face)..."
-          curl -L "${HF_URL_85}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          curl -L "${HF_DIRECT_85}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
 
           echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 중 (Hugging Face)..."
-          curl -L "${HF_URL_80}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          curl -L "${HF_DIRECT_80}" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
 
-          echo "✅ 다운로드 완료! 리얼 바이너리 스토리지 스캔 결과:"
+          echo "✅ 다운로드 완료! 실제 파일 매핑 크기 체크:"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
