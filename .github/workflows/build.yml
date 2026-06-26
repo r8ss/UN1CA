@@ -50,7 +50,6 @@ jobs:
             libbrotli-dev libgtest-dev libprotobuf-dev libunwind-dev libpcre2-dev \
             libzstd-dev linux-modules-extra-$(uname -r) lld protobuf-compiler webp python3-pip
           sudo modprobe erofs f2fs
-          # 구글 드라이브 안전 다운로더 설치
           pip3 install --break-system-packages gdown
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -70,18 +69,18 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [구글 대용량 우회 교정] gdown 표준 인자(-O) 적용 스트리밍 다운로드
+      # 🚀 [구글 대용량 우회] 인자 제거 및 표준 공유 링크 포맷으로 직공 다운로드
       # =========================================================================
       - name: Secure Download Stock Firmwares via Python Gdown
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 (gdown 표준 규격)..."
-          gdown --fuzzy "1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드..."
+          gdown "https://drive.google.com/uc?id=1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
 
-          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 (gdown 표준 규격)..."
-          gdown --fuzzy "1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드..."
+          gdown "https://drive.google.com/uc?id=1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
 
           echo "✅ 다운로드 완료! 파일 크기 검증:"
           ls -lh src/firmware/SM-S911N_KOO/
