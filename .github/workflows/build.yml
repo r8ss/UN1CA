@@ -70,20 +70,20 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [구글 대용량 완벽 우회] python gdown 기반 무결성 펌웨어 다운로드
+      # 🚀 [구글 대용량 우회 교정] gdown 표준 인자(-O) 적용 스트리밍 다운로드
       # =========================================================================
       - name: Secure Download Stock Firmwares via Python Gdown
         run: |
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
-          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 (gdown 정밀 스트리밍)..."
-          gdown --remaining-ok "1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
+          echo "📥 1. 포팅 베이스 One UI 8.5 다운로드 (gdown 표준 규격)..."
+          gdown --fuzzy "1k0dtSzZMoIiuryEG5OTIFgnXPQGHbyl3" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip"
 
-          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 (gdown 정밀 스트리밍)..."
-          gdown --remaining-ok "1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -o "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
+          echo "📥 2. 디바이스 타겟 One UI 8.0 v8 다운로드 (gdown 표준 규격)..."
+          gdown --fuzzy "1aaJBiX1-8H8qPP8y-gQd27bOFPd0xSJo" -O "src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip"
 
-          echo "✅ 다운로드 완료! 파일 결함 여부 및 실제 크기 검증:"
+          echo "✅ 다운로드 완료! 파일 크기 검증:"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
@@ -94,11 +94,10 @@ jobs:
           echo "🤖 빌더 내장 복사 세션 수동 개방..."
           mkdir -p out/odin/SM-S911N_KOO
           
-          # 파일 무결성이 확보되었으므로 안전하게 압축을 풉니다.
           unzip -o src/firmware/SM-S911N_KOO/SM-S911N_5_20260612073910_b08t3v3kt6_fac.zip -d out/odin/SM-S911N_KOO/
           unzip -o src/firmware/SM-S911N_KOO/SM-S911N_5_20260101120000_target_fac.zip -d out/odin/SM-S911N_KOO/
           
-          # 빌더가 다운로드 및 압축 해제가 완수된 세션으로 무조건 인지하게끔 플래그 적재
+          # 빌더 플래그 수동 적재
           echo "S911NKSS8FZF1/S911NOKR8FZF1/S911NKSS8FZF1" > out/odin/SM-S911N_KOO/.downloaded
           
           echo "🤖 해제 완료된 리얼 바이너리 타르볼 리스트:"
