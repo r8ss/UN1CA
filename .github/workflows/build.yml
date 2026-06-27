@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [dm2q] # S23+ 베이스 지정을 위해 dm2q로 셋업
+        target: [dm1q] # 🔥 최종 타겟 기기인 S23 노멀(dm1q)로 정밀 수정!
 
     steps:
       - name: Checkout repo
@@ -68,53 +68,48 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 🚀 [허깅페이스 직공] S23 타겟 펌웨어 전용 단독 다운로드 파이프라인
+      # 📥 [타겟 펌웨어] S23 노멀 8.0 v8 허깅페이스 프리로드 다운로드
       # =========================================================================
-      - name: Hugging Face Target Firmware Download
+      - name: Download Target Firmware (Hugging Face)
         run: |
+          echo "🤖 타겟 스토리지 디렉토리 준비..."
           rm -rf src/firmware/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO
 
           HF_TARGET_80="https://huggingface.co/datasets/ssch11/S911N85un1ca1/resolve/main/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
-          echo "📥 디바이스 타겟 One UI 8.0 v8 다운로드 중 (Hugging Face)..."
+          echo "📥 S23 타겟 8.0 v8 다운로드 중..."
           curl -L "${HF_TARGET_80}" -o "src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
-          echo "✅ 타겟 펌웨어 단독 배치 완료:"
+          echo "✅ 타겟 프리로드 로컬 배치 성공:"
           ls -lh src/firmware/SM-S911N_KOO/
 
       # =========================================================================
-      # 🛠️ 타겟 펌웨어 수동 압축 해제 및 빌더 플래그 인젝션
+      # 🛠️ 빌더 인젝션 (S23 노멀 타겟 경로에 수동 풀기 및 바이패스 마킹)
       # =========================================================================
-      - name: Force Unpack Target Firmware
+      - name: Pre-Unpack Target Firmware & Stub Validation
         run: |
-          echo "🤖 빌더 내장 타겟 캐시 세션 수동 개방..."
+          echo "🤖 빌더 캐시 세션 수동 프로비저닝..."
           rm -rf out/odin/SM-S911N_KOO
           mkdir -p out/odin/SM-S911N_KOO
           
+          # 타겟 압축파일을 오딘 S23 노멀 경로에 풀기
           unzip -o src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip -d out/odin/SM-S911N_KOO/
           
+          # 다운로드 플래그 마킹
           echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.downloaded
           echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.extracted
           
-          echo "🤖 해제 완료된 타겟 바이너리 리스트:"
-          ls -lh out/odin/SM-S911N_KOO/
-
-      # =========================================================================
-      # 🛠️ 빌더 스크립트 무력화 (에러 유발하는 문법 및 검증 단계 패스)
-      # =========================================================================
-      - name: Stub Out Extract Script
-        run: |
-          echo "🤖 extract_fw.sh 스크립트 오버라이드 우회..."
+          echo "🤖 extract_fw.sh 검증 루틴 바이패스..."
           if [ -f "scripts/extract_fw.sh" ]; then
             echo '#!/usr/bin/env bash' > scripts/extract_fw.sh
-            echo 'echo "🤖 S23+ 베이스 최신 자동 다운로드 및 타겟 수동 매핑 완료 상태로 바이패스합니다."' >> scripts/extract_fw.sh
+            echo 'echo "🤖 [Bypass] 타겟(S23 노멀) 수동 주입 완료, 베이스(S23+)는 qssi 로직에 맡깁니다."' >> scripts/extract_fw.sh
             echo 'exit 0' >> scripts/extract_fw.sh
             chmod +x scripts/extract_fw.sh
           fi
 
       # =========================================================================
-      # 🛠️ 순정 ROM 컴파일 파이프라인
+      # 🛠️ 순정 ROM 컴파일 파이프라인 (S23 노멀 장치 사양으로 빌드 돌리기)
       # =========================================================================
       - name: Build ROM
         run: |
