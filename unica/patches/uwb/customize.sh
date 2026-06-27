@@ -45,8 +45,10 @@ if ! $SOURCE_HAS_UWB; then
         LOG "\033[0;33m! Nothing to do\033[0m"
     fi
 else
+    # 베이스에 UWB가 있고 타겟에 UWB가 없을 때 (SOURCE: true / TARGET: false)
+    # 하드웨어가 없으므로 패치하지 않고 패스함
     if ! $TARGET_HAS_UWB; then
-        ABORT "Missing patch for condition (SOURCE_HAS_UWB: [$SOURCE_HAS_UWB], TARGET_HAS_UWB: [$TARGET_HAS_UWB]). Aborting"
+        LOG "\033[0;33m! Source has UWB but Target does not. Skipping UWB patches.\033[0m"
     fi
 fi
 
