@@ -68,9 +68,9 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 📥 [1] 타겟 펌웨어 (S23 노멀 8.0 v8) 다운로드 및 가상 플래그 주입
+      # 📥 [1] 타겟 펌웨어 (S23 노멀 8.0 v8) 다운로드 및 순정 오딘 폴더 세팅
       # =========================================================================
-      - name: Download & Unpack Target Firmware (S23)
+      - name: Download Target Firmware (S23)
         run: |
           echo "🤖 타겟(S23) 디렉토리 준비..."
           rm -rf src/firmware/SM-S911N_KOO out/odin/SM-S911N_KOO
@@ -81,17 +81,16 @@ jobs:
           echo "📥 S23 타겟 8.0 허깅페이스 다운로드..."
           curl -L "${HF_TARGET_80}" -o "src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
-          echo "📦 S23 압축 해제..."
+          echo "📦 S23 1차 압축 해제 (AP, BL, CP, CSC 파일들 추출)..."
           unzip -o src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip -d out/odin/SM-S911N_KOO/
 
-          # 완료 플래그 주입
+          # 다운로드 완료 플래그 주입 (추출 플래그는 주입하지 않음 -> extract_fw.sh가 직접 일하게 만듦)
           echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.downloaded
-          echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.extracted
 
       # =========================================================================
-      # 📥 [2] 베이스 펌웨어 (S23+ 플러스 8.5) 다운로드 및 가상 플래그 주입
+      # 📥 [2] 베이스 펌웨어 (S23+ 플러스 8.5) 다운로드 및 순정 오딘 폴더 세팅
       # =========================================================================
-      - name: Download & Unpack Base Firmware (S23+)
+      - name: Download Base Firmware (S23+)
         run: |
           echo "🤖 베이스(S23+) 디렉토리 준비..."
           rm -rf src/firmware/SM-S916N_KOO out/odin/SM-S916N_KOO
@@ -102,36 +101,28 @@ jobs:
           echo "📥 S23+ 베이스 8.5 허깅페이스 다운로드..."
           curl -L "${HF_BASE_85}" -o "src/firmware/SM-S916N_KOO/SAMFW.COM_SM-S916N_KOO_S916NKSS8FZF1_fac.zip"
 
-          echo "📦 S23+ 압축 해제..."
+          echo "📦 S23+ 1차 압축 해제 (AP, BL, CP, CSC 파일들 추출)..."
           unzip -o src/firmware/SM-S916N_KOO/SAMFW.COM_SM-S916N_KOO_S916NKSS8FZF1_fac.zip -d out/odin/SM-S916N_KOO/
 
-          # 완료 플래그 주입
+          # 다운로드 완료 플래그 주입 (추출 플래그는 주입하지 않음 -> extract_fw.sh가 직접 일하게 만듦)
           echo "S916NKSS8FZF1/S916NOKR8FZF1/S916NKSS8FZF1" > out/odin/SM-S916N_KOO/.downloaded
-          echo "S916NKSS8FZF1/S916NOKR8FZF1/S916NKSS8FZF1" > out/odin/SM-S916N_KOO/.extracted
 
       # =========================================================================
-      # ❌ [3] 수동 배치 완료로 순정 다운로드/추출 스크립트 전면 무력화 (Bypass)
+      # ❌ [3] 다운로드 스크립트만 무력화 (추출 스크립트는 순정 상태로 살려둠)
       # =========================================================================
-      - name: Bypass download_fw.sh & extract_fw.sh
+      - name: Bypass download_fw.sh Only
         run: |
-          echo "🤖 허깅페이스 직공 완료로 순정 스크립트를 우회 처리합니다."
+          echo "🤖 다운로드는 이미 허깅페이스로 끝냈으므로 download_fw.sh만 패스합니다."
           
           if [ -f "scripts/download_fw.sh" ]; then
             echo '#!/usr/bin/env bash' > scripts/download_fw.sh
-            echo 'echo "🤖 [Bypass] 펌웨어 수동 다운로드 완료."' >> scripts/download_fw.sh
+            echo 'echo "🤖 [Bypass] 펌웨어 수동 다운로드 완료 플래그 감지."' >> scripts/download_fw.sh
             echo 'exit 0' >> scripts/download_fw.sh
             chmod +x scripts/download_fw.sh
           fi
 
-          if [ -f "scripts/extract_fw.sh" ]; then
-            echo '#!/usr/bin/env bash' > scripts/extract_fw.sh
-            echo 'echo "🤖 [Bypass] 펌웨어 수동 언팩 완료."' >> scripts/extract_fw.sh
-            echo 'exit 0' >> scripts/extract_fw.sh
-            chmod +x scripts/extract_fw.sh
-          fi
-
       # =========================================================================
-      # 🛠️ [4] 롬 빌드 스타트
+      # 🛠️ [4] 롬 빌드 스타트 (여기서 순정 extract_fw.sh가 돌며 out/fw/ 폴더를 생성함)
       # =========================================================================
       - name: Build ROM
         run: |
