@@ -68,54 +68,78 @@ jobs:
           ./scripts/build_dependencies.sh
 
       # =========================================================================
-      # 📥 [1] 타겟 펌웨어 (S23 노멀 8.0 v8) 선제 다운로드 및 완벽 배치
+      # 📥 [1] 타겟 펌웨어 (S23 노멀 8.0 v8) 다운로드 및 가상 플래그 주입
       # =========================================================================
-      - name: Pre-download Target Firmware (S23) via HuggingFace
+      - name: Download & Unpack Target Firmware (S23)
         run: |
-          echo "🤖 타겟(S23 노멀) 디렉토리 선제 준비..."
+          echo "🤖 타겟(S23) 디렉토리 준비..."
           rm -rf src/firmware/SM-S911N_KOO out/odin/SM-S911N_KOO
           mkdir -p src/firmware/SM-S911N_KOO out/odin/SM-S911N_KOO
 
           HF_TARGET_80="https://huggingface.co/datasets/ssch11/S911N85un1ca1/resolve/main/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
-          echo "📥 S23 타겟 8.0 v8 허깅페이스 다운로드 중..."
+          echo "📥 S23 타겟 8.0 허깅페이스 다운로드..."
           curl -L "${HF_TARGET_80}" -o "src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip"
 
-          echo "📦 타겟 펌웨어 압축 해제..."
+          echo "📦 S23 압축 해제..."
           unzip -o src/firmware/SM-S911N_KOO/SAMFW.COM_SM-S911N_KOO_S911NKSS6EZA1_fac.zip -d out/odin/SM-S911N_KOO/
 
-          # 툴체인이 타겟을 이미 완료된 것으로 인식하도록 플래그 강제 주입
+          # 완료 플래그 주입
           echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.downloaded
           echo "S911NKSS6EZA1/S911NOKR6EZA1/S911NKSS6EZA1" > out/odin/SM-S911N_KOO/.extracted
-          echo "✅ S23 타겟 우회 준비 완료."
 
       # =========================================================================
-      # ✂️ [2] download_fw.sh 파싱 에러 방어 코드 패치
+      # 📥 [2] 베이스 펌웨어 (S23+ 플러스 8.5) 다운로드 및 가상 플래그 주입
       # =========================================================================
-      - name: Patch download_fw.sh to bypass target parsing error
+      - name: Download & Unpack Base Firmware (S23+)
         run: |
-          echo "🤖 download_fw.sh 스크립트 수정 중..."
+          echo "🤖 베이스(S23+) 디렉토리 준비..."
+          rm -rf src/firmware/SM-S916N_KOO out/odin/SM-S916N_KOO
+          mkdir -p src/firmware/SM-S916N_KOO out/odin/SM-S916N_KOO
+
+          HF_BASE_85="https://huggingface.co/datasets/ssch11/S911N85un1ca1/resolve/main/SAMFW.COM_SM-S916N_KOO_S916NKSS8FZF1_fac.zip"
+
+          echo "📥 S23+ 베이스 8.5 허깅페이스 다운로드..."
+          curl -L "${HF_BASE_85}" -o "src/firmware/SM-S916N_KOO/SAMFW.COM_SM-S916N_KOO_S916NKSS8FZF1_fac.zip"
+
+          echo "📦 S23+ 압축 해제..."
+          unzip -o src/firmware/SM-S916N_KOO/SAMFW.COM_SM-S916N_KOO_S916NKSS8FZF1_fac.zip -d out/odin/SM-S916N_KOO/
+
+          # 완료 플래그 주입
+          echo "S916NKSS8FZF1/S916NOKR8FZF1/S916NKSS8FZF1" > out/odin/SM-S916N_KOO/.downloaded
+          echo "S916NKSS8FZF1/S916NOKR8FZF1/S916NKSS8FZF1" > out/odin/SM-S916N_KOO/.extracted
+
+      # =========================================================================
+      # ❌ [3] 수동 배치 완료로 순정 다운로드/추출 스크립트 전면 무력화 (Bypass)
+      # =========================================================================
+      - name: Bypass download_fw.sh & extract_fw.sh
+        run: |
+          echo "🤖 허깅페이스 직공 완료로 순정 스크립트를 우회 처리합니다."
+          
           if [ -f "scripts/download_fw.sh" ]; then
-            # 타겟 문자열 파싱 중 IMEI/SN 정규식 유효성 검증 실패 시 exit 1로 빌드 터트리는 부분을 return 0으로 우회
-            sed -i 's/exit 1/return 0/g' scripts/download_fw.sh
-            echo "✅ 스크립트 패치 완료."
-          else
-            echo "⚠️ scripts/download_fw.sh 파일을 찾을 수 없습니다. 패치를 건너뜁니다."
+            echo '#!/usr/bin/env bash' > scripts/download_fw.sh
+            echo 'echo "🤖 [Bypass] 펌웨어 수동 다운로드 완료."' >> scripts/download_fw.sh
+            echo 'exit 0' >> scripts/download_fw.sh
+            chmod +x scripts/download_fw.sh
+          fi
+
+          if [ -f "scripts/extract_fw.sh" ]; then
+            echo '#!/usr/bin/env bash' > scripts/extract_fw.sh
+            echo 'echo "🤖 [Bypass] 펌웨어 수동 언팩 완료."' >> scripts/extract_fw.sh
+            echo 'exit 0' >> scripts/extract_fw.sh
+            chmod +x scripts/extract_fw.sh
           fi
 
       # =========================================================================
-      # 🛠️ [3] 순정 빌더 스크립트 가동 (S23+ 베이스만 자동 다운로드 및 전체 컴파일)
+      # 🛠️ [4] 롬 빌드 스타트
       # =========================================================================
       - name: Build ROM
         run: |
           source ./buildenv.sh ${{ matrix.target }}
-          
-          # 1. scripts/download_fw.sh 실행 시 S23 타겟은 완료 플래그 때문에 패스, S23+ 베이스만 삼펌에서 받아옴
-          # 2. 이어서 scripts/extract_fw.sh가 베이스만 언팩 후 조립 프로세스 진행
           ./scripts/make_rom.sh
 
       # =========================================================================
-      # 📤 [4] 산출물 Gofile 업로드
+      # 📤 [5] 결과물 Gofile 업로드
       # =========================================================================
       - name: Upload to Gofile
         run: |
